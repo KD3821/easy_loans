@@ -1,0 +1,7 @@
+import os
+
+LOG_LEVEL = "DEBUG"
+HOT_RELOAD = True
+LOG_ORM = True
+LOG_REQUEST = True
+LOG_RESPONSE = True

@@ -1,0 +1,47 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+alembic = "*"
+databases = "==0.5.3"
+asyncpg = "*"
+psycopg2 = "==2.9.3"
+loguru = "==0.5.3"
+passlib = "==1.7.4"
+SQLAlchemy = "==1.4.29"
+uvicorn = "*"
+fastapi = "*"
+pydantic = {extras = ["email"], version = "*"}
+dependency-injector = "*"
+python-dotenv = "*"
+python-jose = "==3.3.0"
+flask-sqlalchemy = "*"
+gunicorn = "*"
+fastapi-jwt = "*"
+flask-security-too = "~=3.2"
+flask = "==2.2.3"
+flask-admin = "*"
+pytz = "*"
+werkzeug = "==2.2.2"
+
+[dev-packages]
+pre-commit = "*"
+flake8 = "*"
+ipython = "*"
+ipdb = "*"
+bandit = "*"
+
+[requires]
+python_version = "3.11"
+
+[scripts]
+server = "python api.py"
+shell = "ipython --ipython-dir=./.ipython"
+admin = "gunicorn --bind 0.0.0.0:5001 admin:app --reload"
+seeds = "python scripts/run_seeds.py"
+migrate = "alembic upgrade head"
+manual_migration = "alembic revision -m"
+auto_migration = "alembic revision --autogenerate"
+script = "python scripts/run_script.py"
