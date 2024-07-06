@@ -42,7 +42,7 @@ class AccountService:
 
     @classmethod
     async def create_worker(cls, user: WorkerCreate) -> WorkerAccessCode:
-        if cls.check_user_exists(user.email) is not None:
+        if await cls.check_user_exists(user.email) is not None:
             raise AppException("create_worker.user_already_exists")
 
         access_code = cls.get_access_code()

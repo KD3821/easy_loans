@@ -1,11 +1,13 @@
-from db import Base
 from sqlalchemy import Boolean, Column, DateTime, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
+from db import Base
+
 
 class User(Base):
     __tablename__ = "users"
+
     MANAGER = "manager"
     WORKER = "worker"
 
