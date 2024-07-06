@@ -7,6 +7,7 @@ class FlaskAdminUser(User):
     and adding to is some specifc
     properties to make Flask Admin work
     """
+
     @property
     def is_authenticated(self):
         return True

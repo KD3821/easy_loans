@@ -1,9 +1,10 @@
 import sys
+
 sys.path = ["", ".."] + sys.path[1:]
-from core import logger, OrmInternalService  # noqa: E402
+from core import OrmInternalService, logger  # noqa: E402
 from core.scripts import perform
 
-script_names = ('import_data', )
+script_names = ("import_data",)
 
 PERFORM_FUNC_NAME = "perform"
 SCRIPTS_PATH = "scripts.one_time_scripts"

@@ -1,9 +1,10 @@
 from dependency_injector import containers, providers
 
+from apps.users.features.account_management.services import AccountService
+from apps.users.storages import UsersStorage
+
 from .cases import AuthCases
 from .storages import SignInStorage
-from apps.users.storages import UsersStorage
-from apps.users.features.account_management.services import AccountService
 
 
 class Container(containers.DeclarativeContainer):

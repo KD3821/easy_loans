@@ -1,4 +1,5 @@
 from db import Base
+
 from .base_import_service import BaseImportService
 
 
@@ -17,10 +18,10 @@ class OrmInternalService(BaseImportService):
         # to make auto migrations work
         metadata = cls.get_items(
             target_subfolders=cls.TARGET_SUBFOLDERS,
-            not_checked_message=cls.METADATA_NOT_CHECKED_MESSAGE
+            not_checked_message=cls.METADATA_NOT_CHECKED_MESSAGE,
         )
 
-        metadata = [metadata_item['value'].metadata for metadata_item in metadata]
+        metadata = [metadata_item["value"].metadata for metadata_item in metadata]
         return Base.metadata
 
     @classmethod
@@ -29,7 +30,7 @@ class OrmInternalService(BaseImportService):
         # for Flask Admin
         models = cls.get_items(
             target_subfolders=cls.TARGET_SUBFOLDERS,
-            not_checked_message=cls.MODELS_NOT_CHECKED_MESSAGE
+            not_checked_message=cls.MODELS_NOT_CHECKED_MESSAGE,
         )
 
-        return [model['value'] for model in models]
+        return [model["value"] for model in models]

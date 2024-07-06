@@ -1,23 +1,25 @@
+from db import Base
 from flask import Flask, url_for
 from flask_admin import Admin
-from flask_sqlalchemy import SQLAlchemy
-from flask_security import Security, SQLAlchemyUserDatastore
 from flask_admin import helpers as admin_helpers
+from flask_security import Security, SQLAlchemyUserDatastore
+from flask_sqlalchemy import SQLAlchemy
+from settings import (APP_ADMIN_NAME, DB_HOST, DB_NAME, DB_PASS, DB_PORT,
+                      DB_USER, JWT_SECRET_KEY)
+
 from .forms import CustomLoginForm
 from .models import FlaskAdminUser
-from settings import DB_USER, DB_PASS, DB_HOST, DB_PORT, DB_NAME, \
-    JWT_SECRET_KEY, APP_ADMIN_NAME
-from db import Base
-
 
 app = Flask(__name__)
 
 # Configurations of Flask application
-app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
-app.config['SECURITY_REGISTERABLE'] = False
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config["FLASK_ADMIN_SWATCH"] = "cerulean"
+app.config["SECURITY_REGISTERABLE"] = False
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.secret_key = JWT_SECRET_KEY
-app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+app.config["SQLALCHEMY_DATABASE_URI"] = (
+    f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+)
 
 # Make db connection
 db = SQLAlchemy(app)
@@ -28,7 +30,7 @@ db = SQLAlchemy(app)
 Base.query = db.session.query_property()
 
 # Create Flask Admin
-admin = Admin(app, name=APP_ADMIN_NAME, template_mode='bootstrap3')
+admin = Admin(app, name=APP_ADMIN_NAME, template_mode="bootstrap3")
 
 # Import View to attach them to Flask app
 import apps.admin.views  # noqa # pylint: disable=unused-import
@@ -46,5 +48,5 @@ def security_context_processor():
         admin_base_template=admin.base_template,
         admin_view=admin.index_view,
         h=admin_helpers,
-        get_url=url_for
+        get_url=url_for,
     )

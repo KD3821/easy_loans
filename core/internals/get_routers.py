@@ -1,5 +1,6 @@
 from glob import glob
 from importlib import import_module
+
 from ..loggers import logger
 
 
@@ -20,7 +21,8 @@ class GetRouters:
         # scan all 'models' folders in TARGET_FOLDER recursively
         routers_data = []
         files_with_routers = glob(
-            f'{cls.TARGET_FOLDER}/**/routers_{version}.py', recursive=True)
+            f"{cls.TARGET_FOLDER}/**/routers_{version}.py", recursive=True
+        )
 
         for module_path in files_with_routers:
             try:

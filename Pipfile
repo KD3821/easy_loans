@@ -5,6 +5,8 @@ name = "pypi"
 
 [packages]
 alembic = "*"
+black = "==24.3.0"
+isort = "==5.13.2"
 databases = "==0.5.3"
 asyncpg = "*"
 psycopg2 = "==2.9.3"

@@ -18,11 +18,17 @@ def get_openapi_schema(fast_api):
             try:
                 for path in openapi_schema["paths"]:
                     for method in openapi_schema["paths"][path]:
-                        if openapi_schema["paths"][path][method]["responses"].get("422"):
+                        if openapi_schema["paths"][path][method]["responses"].get(
+                            "422"
+                        ):
                             openapi_schema["paths"][path][method]["responses"][
                                 "400"
-                            ] = openapi_schema["paths"][path][method]["responses"]["422"]
-                            openapi_schema["paths"][path][method]["responses"].pop("422")
+                            ] = openapi_schema["paths"][path][method]["responses"][
+                                "422"
+                            ]
+                            openapi_schema["paths"][path][method]["responses"].pop(
+                                "422"
+                            )
                 fast_api.openapi_schema = openapi_schema
                 return fast_api.openapi_schema
             except KeyError:

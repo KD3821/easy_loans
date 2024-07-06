@@ -11,6 +11,10 @@ fast_api = get_application()
 
 if __name__ == "__main__":
     logger.info(f"Application is working on {settings.PORT} port\n")
-    uvicorn.run("api:fast_api", host=settings.HOST, port=settings.PORT,
-                log_level=settings.LOG_LEVEL.lower(), reload=settings.HOT_RELOAD
-                )
+    uvicorn.run(
+        "api:fast_api",
+        host=settings.HOST,
+        port=settings.PORT,
+        log_level=settings.LOG_LEVEL.lower(),
+        reload=settings.HOT_RELOAD,
+    )

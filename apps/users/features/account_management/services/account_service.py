@@ -1,13 +1,16 @@
-import string
 import random
+import string
 
+from core import AppException
+from db import async_session
 from sqlalchemy.future import select
 
-from db import async_session
-from ..schemas import WorkerCreate, WorkerVerify, WorkerAccessCode
-from apps.users.schemas import User
-from apps.users.storages.users_storage import get_random_string, hash_password
 from apps.users.models.user import User as UserModel
+from apps.users.schemas import TokenUser
+from apps.users.storages.users_storage import get_random_string, hash_password
+
+from ..schemas import (WorkerAccessCode, WorkerAccessCodeReset, WorkerCreate,
+                       WorkerVerify)
 
 
 class AccountService:
@@ -19,7 +22,9 @@ class AccountService:
         return access_code
 
     @staticmethod
-    def validate_access_code(access_code: str, hashed_access_code: str):  # may be done different way
+    def validate_access_code(
+        access_code: str, hashed_access_code: str
+    ):  # may be done different way
         salt, hashed = hashed_access_code.split("$")
         return hash_password(access_code, salt) == hashed
 
@@ -27,7 +32,9 @@ class AccountService:
     async def create_worker(cls, user: WorkerCreate) -> WorkerAccessCode:
         access_code = cls.get_access_code()
         salt = get_random_string()
-        hashed_access_code = hash_password(access_code, salt)  # may be done different way
+        hashed_access_code = hash_password(
+            access_code, salt
+        )  # may be done different way
 
         async with async_session() as session:
             user = cls._table(
@@ -35,26 +42,33 @@ class AccountService:
                 username=user.username,
                 hashed_password=f"{salt}${hashed_access_code}",
                 role=UserModel.WORKER,
-                is_verified=False  # todo change to False in production
+                is_verified=False,  # todo change to False in production
             )
             session.add(user)
             await session.commit()
 
-        user = user and User.model_validate(user)
+        user = user and TokenUser.model_validate(user)
         return WorkerAccessCode(email=user.email, access_code=access_code)
 
     @classmethod
-    async def reset_worker_access_code(cls, user: WorkerCreate) -> WorkerAccessCode:
+    async def reset_worker_access_code(
+        cls, user: WorkerAccessCodeReset
+    ) -> WorkerAccessCode:
         access_code = cls.get_access_code()
         salt = get_random_string()
         hashed_access_code = hash_password(access_code, salt)
 
         async with async_session() as session:
             query = await session.execute(
-                select(cls._table).filter(cls._table.email == user.email and user.email.lower())
+                select(cls._table).filter(
+                    cls._table.email == user.email and user.email.lower()
+                )
             )
             user = query.scalars().first()
-            user.hashed_password = hashed_access_code
+            if user.is_verified:
+                raise AppException("reset_access_code.user_is_verified")
+
+            user.hashed_password = f"{salt}${hashed_access_code}"
             await session.commit()
 
         return WorkerAccessCode(email=user.email, access_code=access_code)
@@ -66,7 +80,10 @@ class AccountService:
 
         async with async_session() as session:
             query = await session.execute(
-                select(cls._table).filter(cls._table.email == verified_user.email and verified_user.email.lower())
+                select(cls._table).filter(
+                    cls._table.email == verified_user.email
+                    and verified_user.email.lower()
+                )
             )
             user = query.scalars().first()
             user.username = verified_user.username
@@ -74,5 +91,5 @@ class AccountService:
             user.is_verified = True
             await session.commit()
 
-        user = user and User.model_validate(user)
+        user = user and TokenUser.model_validate(user)
         return user

@@ -1,12 +1,12 @@
-from starlette.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, Depends
-from .get_routers import GetRouters
-from .decorate_fast_api import decorate_fast_api
-from ..loggers.log_request import log_requets_params
+from fastapi import Depends, FastAPI
 from settings import LOG_REQUEST
+from starlette.middleware.cors import CORSMiddleware
 
+from ..loggers.log_request import log_requets_params
+from .decorate_fast_api import decorate_fast_api
+from .get_routers import GetRouters
 
-SUPPORTED_VERSIONS = ('v1', )
+SUPPORTED_VERSIONS = ("v1",)
 
 
 def get_application() -> FastAPI:
@@ -29,7 +29,7 @@ def get_application() -> FastAPI:
         routers_data = GetRouters.call(version)
 
         for router_data in routers_data:
-            if router_data.get('prefix'):
+            if router_data.get("prefix"):
                 prefix = f"/api/{version}/{router_data.get('prefix')}"
             else:
                 prefix = f"/api/{version}"
@@ -43,8 +43,9 @@ def get_application() -> FastAPI:
 
             app.include_router(
                 router_data["router"],
-                prefix=prefix, **extra_params,
-                dependencies=dependencies
+                prefix=prefix,
+                **extra_params,
+                dependencies=dependencies,
             )
 
     # decorate Fast API application with some additional handlers for events, requests, etc

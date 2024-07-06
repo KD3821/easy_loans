@@ -1,8 +1,9 @@
+from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from fastapi import status
 from settings import LOG_RESPONSE
+
 from ..loggers.log_request import log_response_params
 from .get_openapi_schema import get_openapi_schema
 

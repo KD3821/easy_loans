@@ -1,6 +1,7 @@
 from glob import glob
 from http.client import NOT_IMPLEMENTED
 from importlib import import_module
+
 from ..loggers import logger
 
 
@@ -12,6 +13,7 @@ class BaseImportService:
     Thus all folders from which items have to be imported
     should have __init__.py file with __all__ variable.
     """
+
     TARGET_FOLDER = "apps"
     TARGET_SUBFOLDERS = NOT_IMPLEMENTED
     NOT_CHECKED_MESSAGE = "is not checked for items"
@@ -26,8 +28,10 @@ class BaseImportService:
         module_name = module_name[:-1]
         module_name = module_name.replace("/", ".")
         target_module = import_module(module_name)
-        module_items = [{"name": item_name, "value": getattr(target_module, item_name)}
-                        for item_name in target_module.__all__]
+        module_items = [
+            {"name": item_name, "value": getattr(target_module, item_name)}
+            for item_name in target_module.__all__
+        ]
         return module_items
 
     @classmethod
@@ -37,7 +41,7 @@ class BaseImportService:
         """
         subfolders = target_subfolders or cls.TARGET_SUBFOLDERS
 
-        return glob(f'{cls.TARGET_FOLDER}/**/{subfolders}/', recursive=True)
+        return glob(f"{cls.TARGET_FOLDER}/**/{subfolders}/", recursive=True)
 
     @classmethod
     def get_items(cls, target_subfolders=None, not_checked_message=None) -> list[dict]:

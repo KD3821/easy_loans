@@ -2,13 +2,12 @@ import hashlib
 import random
 import string
 
+from db import async_session
 from passlib.context import CryptContext
 from sqlalchemy.future import select
 
-from ..schemas import User, FullUser, ManagerCreate
 from ..models.user import User as UserModel
-
-from db import async_session
+from ..schemas import FullUser, ManagerCreate, TokenUser
 
 
 def get_random_string(length=12):
@@ -37,8 +36,9 @@ class UsersStorage:
     and responsible only for CRUDL with minimal validations and mostly
     with queries to DB
     """
+
     @classmethod
-    async def create_manager(cls, user: ManagerCreate) -> User:
+    async def create_manager(cls, user: ManagerCreate) -> TokenUser:
         salt = get_random_string()
         hashed_password = hash_password(user.password, salt)
 
@@ -48,18 +48,30 @@ class UsersStorage:
                 username=user.username,
                 hashed_password=f"{salt}${hashed_password}",
                 role=UserModel.MANAGER,
-                is_verified=True  # todo change to False in production (will need verification by owner)
+                is_verified=True,  # todo change to False in production (will need verification by owner)
             )
             session.add(user)
             await session.commit()
 
-        user = user and User.model_validate(user)
+        user = user and TokenUser.model_validate(user)
         return user
 
     @classmethod
-    async def get_user_by_identity(cls, email: str) -> FullUser:
+    async def get_token_user(cls, email: str) -> TokenUser:
         async with async_session() as session:
-            query = await session.execute(select(cls._table).filter(cls._table.email == email and email.lower()))
+            query = await session.execute(
+                select(cls._table).filter(cls._table.email == email and email.lower())
+            )
+            user = query.scalars().first()
+        result = user and TokenUser.model_validate(user)
+        return result
+
+    @classmethod
+    async def get_full_user(cls, email: str) -> FullUser:
+        async with async_session() as session:
+            query = await session.execute(
+                select(cls._table).filter(cls._table.email == email and email.lower())
+            )
             user = query.scalars().first()
         result = user and FullUser.model_validate(user)
         return result

@@ -1,17 +1,25 @@
-from core import logger
-from scripts.db_session import db_session
 from apps.users.models import User
-from apps.users.storages.users_storage import hash_password, get_random_string
+from apps.users.storages.users_storage import get_random_string, hash_password
+from core import logger
 
+from scripts.db_session import db_session
 
 ADMINS = [
-    {"username": "admin", "password": "password", "role": "admin", "email": "admin@example.com", "full_name": "admin"},
+    {
+        "username": "admin",
+        "password": "password",
+        "role": "admin",
+        "email": "admin@example.com",
+        "full_name": "admin",
+    },
 ]
 
 
 def perform(*args, **kwargs):
     for data in ADMINS:
-        is_admin_exists = db_session.query(User).filter_by(username=data["username"]).all()
+        is_admin_exists = (
+            db_session.query(User).filter_by(username=data["username"]).all()
+        )
         salt = get_random_string()
 
         if not is_admin_exists:

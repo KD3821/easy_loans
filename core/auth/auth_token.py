@@ -1,15 +1,10 @@
 from datetime import timedelta
-from fastapi import HTTPException, status
-from fastapi_jwt import (
-    JwtAccessBearer,
-)
-from jose import jwt
-from settings import (
-    AUTH_ACCESS_TOKEN_EXPIRE_MINUTES,
-    AUTH_SECRET_KEY,
-    AUTH_REFRESH_TOKEN_EXPIRE_MINUTES,
-)
 
+from fastapi import HTTPException, status
+from fastapi_jwt import JwtAccessBearer
+from jose import JWTError, jwt
+from settings import (AUTH_ACCESS_TOKEN_EXPIRE_MINUTES,
+                      AUTH_REFRESH_TOKEN_EXPIRE_MINUTES, AUTH_SECRET_KEY)
 
 access_security = JwtAccessBearer(
     secret_key=AUTH_SECRET_KEY,
@@ -24,6 +19,7 @@ class AuthToken:
     https://indominusbyte.github.io/fastapi-jwt-auth/usage/basic/
     """
 
+    @staticmethod
     def generate_access_token(data: dict) -> str:
         return access_security.create_access_token(subject=data)
 
@@ -38,11 +34,11 @@ class AuthToken:
         }
 
     @staticmethod
-    def decrypt_token(token: str) -> dict:
+    def decrypt_token(token: str) -> dict | None:
         if token:
             try:
                 encoded = jwt.decode(token, key=AUTH_SECRET_KEY)
-            except Exception:
+            except JWTError:
                 encoded = None
 
             data = type(encoded) is dict and encoded.get("subject")
@@ -52,7 +48,6 @@ class AuthToken:
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail={"type": "auth.token_invalid"},
                 )
-
             return data
 
         return None

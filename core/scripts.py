@@ -2,8 +2,8 @@
 # By using them it is possible to separate types of functions
 # To use the the file needs to be addes as scripts/run_seeds.py
 
-from .loggers import logger
 from .internals import OrmInternalService
+from .loggers import logger
 
 
 def import_from(module_name, name):
@@ -46,7 +46,9 @@ def perform(args, scripts_path, scripts_names, perform_func_name, is_all_support
     name = args[1]
 
     if is_all_supported and name == "all":
-        return perform_scripts(scripts_names, scripts_path, name, perform_func_name, args)
+        return perform_scripts(
+            scripts_names, scripts_path, name, perform_func_name, args
+        )
 
     if name in scripts_names:
         return perform_script(scripts_path, name, perform_func_name, args[1:])

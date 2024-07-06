@@ -1,6 +1,7 @@
 from fastapi import Request, Response
-from .logger import logger
 from starlette.concurrency import iterate_in_threadpool
+
+from .logger import logger
 
 
 async def log_requets_params(request: Request):

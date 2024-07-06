@@ -1,10 +1,11 @@
-from .helpers import deep_get
-from .loggers.logger import logger
+from .auth import (AuthToken, BaseRoute, HasManagerRole, IsAuthenticated,
+                   get_current_user, is_active, is_admin)
 from .exceptions import AppException
+from .helpers import deep_get
+from .internals import BaseImportService, OrmInternalService, get_application
 from .loggers import logger
+from .loggers.logger import logger
 from .schemas import ErrorDetails
-from .internals import OrmInternalService, BaseImportService, get_application
-from .auth import is_active, is_admin, get_current_user, AuthToken, IsAuthenticated, BaseRoute
 
 __all__ = (
     "deep_get",
@@ -20,5 +21,6 @@ __all__ = (
     "BaseRoute",
     "OrmInternalService",
     "BaseImportService",
-    "get_application"
+    "get_application",
+    "HasManagerRole",
 )
