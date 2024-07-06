@@ -7,6 +7,7 @@ class FullUser(BaseModel):
     username: str
     hashed_password: str
     role: str
+    is_verified: bool
 
     model_config = ConfigDict(from_attributes=True)
 

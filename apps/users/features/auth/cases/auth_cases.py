@@ -26,6 +26,9 @@ class AuthCases:
     async def sign_in(self, data: SignIn) -> AuthResponse:
         user = await self._users_repo.get_full_user(data.email)
 
+        if not user.is_verified:
+            raise AppException("auth.user_not_verified")
+
         if not user or not validate_password(data.password, user.hashed_password):
             raise AppException("auth.email_password_invalid")
 
@@ -54,13 +57,22 @@ class AuthCases:
         if not user or not self._account_service.validate_access_code(
             data.access_code, user.hashed_password
         ):
-            raise AppException("sign_up.user_not_found")
+            raise AppException("sign_up.invalid_access_code")
+
+        if user.is_verified:
+            raise AppException("sign_up.user_is_verified")
 
         user = await self._account_service.verify_worker(WorkerVerify(**data.dict()))
         token_pair = AuthToken.generate_pair(user.dict())
+
         return AuthResponse(user=user, **token_pair)
 
-    @staticmethod
-    async def refresh_token(data: RefreshTokenSchema) -> AccessTokenSchema:
+    async def refresh_token(self, data: RefreshTokenSchema) -> AccessTokenSchema:
         data = AuthToken.decrypt_token(data.refresh_token)
+
+        user = await self._users_repo.get_full_user(data.get('email'))
+
+        if not user.is_verified:
+            raise AppException("auth.user_not_verified")
+
         return AccessTokenSchema(access_token=AuthToken.generate_access_token(data))

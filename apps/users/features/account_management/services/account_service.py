@@ -29,7 +29,22 @@ class AccountService:
         return hash_password(access_code, salt) == hashed
 
     @classmethod
+    async def check_user_exists(cls, email):
+        async with async_session() as session:
+            query = await session.execute(
+                select(cls._table).filter(
+                    cls._table.email == email and email.lower()
+                )
+            )
+            user = query.scalars().first()
+
+        return user
+
+    @classmethod
     async def create_worker(cls, user: WorkerCreate) -> WorkerAccessCode:
+        if cls.check_user_exists(user.email) is not None:
+            raise AppException("create_worker.user_already_exists")
+
         access_code = cls.get_access_code()
         salt = get_random_string()
         hashed_access_code = hash_password(
@@ -42,7 +57,7 @@ class AccountService:
                 username=user.username,
                 hashed_password=f"{salt}${hashed_access_code}",
                 role=UserModel.WORKER,
-                is_verified=False,  # todo change to False in production
+                is_verified=False,
             )
             session.add(user)
             await session.commit()
@@ -52,8 +67,16 @@ class AccountService:
 
     @classmethod
     async def reset_worker_access_code(
-        cls, user: WorkerAccessCodeReset
+        cls, worker: WorkerAccessCodeReset
     ) -> WorkerAccessCode:
+        user = await cls.check_user_exists(worker.email)
+
+        if user is None:
+            raise AppException("reset_access_code.user_not_found")
+
+        if user.is_verified:
+            raise AppException("reset_access_code.user_is_verified")
+
         access_code = cls.get_access_code()
         salt = get_random_string()
         hashed_access_code = hash_password(access_code, salt)
@@ -61,20 +84,17 @@ class AccountService:
         async with async_session() as session:
             query = await session.execute(
                 select(cls._table).filter(
-                    cls._table.email == user.email and user.email.lower()
+                    cls._table.email == worker.email and worker.email.lower()
                 )
             )
             user = query.scalars().first()
-            if user.is_verified:
-                raise AppException("reset_access_code.user_is_verified")
-
             user.hashed_password = f"{salt}${hashed_access_code}"
             await session.commit()
 
-        return WorkerAccessCode(email=user.email, access_code=access_code)
+        return WorkerAccessCode(email=worker.email, access_code=access_code)
 
     @classmethod
-    async def verify_worker(cls, verified_user: WorkerVerify):
+    async def verify_worker(cls, verified_user: WorkerVerify) -> TokenUser:
         salt = get_random_string()
         hashed_password = hash_password(verified_user.password, salt)
 
