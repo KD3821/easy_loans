@@ -3,7 +3,6 @@ import random
 import string
 
 from db import async_session
-from passlib.context import CryptContext
 from sqlalchemy.future import select
 
 from ..models.user import User as UserModel
@@ -24,9 +23,6 @@ def hash_password(password: str, salt: str = None):
 def validate_password(password: str, hashed_password: str):
     salt, hashed = hashed_password.split("$")
     return hash_password(password, salt) == hashed
-
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class UsersStorage:

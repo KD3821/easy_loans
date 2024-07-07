@@ -1,6 +1,7 @@
-from datetime import datetime
+from typing import List
+from datetime import datetime, timedelta
 
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
 
 
 class NewCustomer(BaseModel):
@@ -16,6 +17,17 @@ class NewCustomer(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+    @field_validator("birthdate")
+    def eighteen_years_age(cls, birthdate):  # noqa
+        if birthdate > datetime.now() - timedelta(days=(365 * 18)):
+            raise ValueError("Must be 18 years old to apply for loan.")
+        return birthdate.date()
+
 
 class Customer(NewCustomer):
     id: int
+
+
+class CustomerList(BaseModel):
+    total: int
+    customers: List[Customer]
