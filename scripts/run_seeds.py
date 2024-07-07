@@ -4,7 +4,7 @@ sys.path = ["", ".."] + sys.path[1:]
 from core import logger  # noqa: E402
 from core.scripts import perform
 
-script_names = ("admins",)
+script_names = ("admins", "transactions")
 
 PERFORM_FUNC_NAME = "perform"
 SCRIPTS_PATH = "scripts.seeds"
