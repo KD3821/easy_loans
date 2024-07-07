@@ -27,6 +27,7 @@ flask = "==2.2.3"
 flask-admin = "*"
 pytz = "*"
 werkzeug = "==2.2.2"
+faker = "*"
 
 [dev-packages]
 pre-commit = "*"
