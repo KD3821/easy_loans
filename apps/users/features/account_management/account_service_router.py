@@ -11,6 +11,7 @@ router = APIRouter(
     dependencies=[Depends(HasManagerRole())],
     responses={
         401: {"model": ErrorDetails},
+        403: {"model": ErrorDetails},
         404: {"model": ErrorDetails},
     },
 )

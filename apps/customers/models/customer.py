@@ -4,6 +4,7 @@ from sqlalchemy import Column, Integer, String, DateTime, Date, Boolean
 
 from db import Base
 from apps.loans.models import Loan
+from apps.transactions.models import Transaction
 
 
 class Customer(Base):

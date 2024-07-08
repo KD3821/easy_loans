@@ -28,12 +28,12 @@ class HasManagerRole(HTTPBearer):
     def __call__(self, user: TokenUser = Depends(get_current_user)) -> TokenUser:
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=status.HTTP_401_UNAUTHORIZED,
                 detail={"type": "auth.not_authenticated"},
             )
         if user.role != User.MANAGER:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
+                status_code=status.HTTP_403_FORBIDDEN,
                 detail={"type": "auth.not_authorized"},
             )
         return user

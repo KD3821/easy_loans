@@ -15,7 +15,6 @@ class Loan(Base):
 
     id = Column(Integer, primary_key=True)
     employee_id = Column(Integer, ForeignKey('users.id'))
-    # employee = relationship('User', back_populates="loans", foreign_keys=[employee_id])
     customer_id = Column(Integer, ForeignKey('customers.id'))
     customer = relationship('Customer', back_populates="loans", foreign_keys=[customer_id])
     monthly_income = Column(Numeric(8, 2))
