@@ -55,9 +55,12 @@ class CustomerStorage:
                 education=customer.education,
                 children=customer.children,
                 self_employed=customer.self_employed,
+                employer=customer.empoyer,
+                monthly_income=customer.monthly_income,
                 property_area=customer.property_area,
                 credit_history=customer.credit_history,
             )
+
             session.add(customer_model)
             await session.commit()
 

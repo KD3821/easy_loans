@@ -1,4 +1,5 @@
 from typing import List
+from decimal import Decimal
 from datetime import datetime, timedelta
 
 from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
@@ -12,6 +13,8 @@ class NewCustomer(BaseModel):
     education: str
     children: int
     self_employed: bool
+    employer: str
+    monthly_income: Decimal
     property_area: str
     credit_history: bool
 

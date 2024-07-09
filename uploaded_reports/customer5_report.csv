@@ -1,0 +1,120 @@
+date,email,type,amount,balance,category,details
+2024-05-01,customer5@mail.com,credit,77.89,522.11,children education,"Davis, Martinez and Williams"
+2024-05-01,customer5@mail.com,credit,36.69,485.42,communal services,Dawson-Dougherty
+2024-05-01,customer5@mail.com,credit,159.62,325.8,car maintenance,"Jefferson, Watts and Simon"
+2024-05-05,customer5@mail.com,deposit,1500.0,1825.8,salary,Solar
+2024-05-05,customer5@mail.com,credit,90.67,1735.13,communal services,Hutchinson-Jones
+2024-05-05,customer5@mail.com,credit,43.45,1691.68,household,Blake PLC
+2024-05-05,customer5@mail.com,credit,13.04,1678.64,internet & TV,Morales-Cortez
+2024-05-05,customer5@mail.com,credit,164.83,1513.81,car maintenance,Jordan-Carroll
+2024-05-05,customer5@mail.com,credit,28.39,1485.42,groceries,Pollard-Melendez
+2024-05-06,customer5@mail.com,credit,7.0,1478.42,other,Higgins Group
+2024-05-06,customer5@mail.com,credit,101.69,1376.73,education,"Cook, Mora and Roman"
+2024-05-06,customer5@mail.com,credit,128.56,1248.17,insurance,Shaw-West
+2024-05-06,customer5@mail.com,credit,8.27,1239.9,taxi,Potter-Ramirez
+2024-05-06,customer5@mail.com,credit,85.34,1154.56,car maintenance,"Brown, Ortiz and Montes"
+2024-05-07,customer5@mail.com,credit,26.25,1128.31,internet & TV,"Oneill, Rojas and Paul"
+2024-05-07,customer5@mail.com,credit,83.13,1045.18,restaurants,Schmitt-Williams
+2024-05-07,customer5@mail.com,credit,20.97,1024.21,internet & TV,"Chandler, Berry and Sanchez"
+2024-05-07,customer5@mail.com,credit,64.54,959.67,groceries,"Richards, Gibson and Cherry"
+2024-05-07,customer5@mail.com,credit,26.68,932.99,internet & TV,Gutierrez Inc
+2024-05-08,customer5@mail.com,credit,101.85,831.14,car maintenance,"Robinson, Allen and Johnson"
+2024-05-08,customer5@mail.com,credit,52.15,778.99,fuel,Cole Inc
+2024-05-08,customer5@mail.com,credit,75.25,703.74,restaurants,Farrell Inc
+2024-05-08,customer5@mail.com,credit,127.33,576.41,communal services,Wolfe-Roberts
+2024-05-08,customer5@mail.com,credit,101.81,474.6,restaurants,Gordon Ltd
+2024-05-09,customer5@mail.com,credit,95.93,378.67,restaurants,"Munoz, Odonnell and Hamilton"
+2024-05-09,customer5@mail.com,credit,64.49,314.18,education,Newman Inc
+2024-05-11,customer5@mail.com,credit,49.24,264.94,medicine,"Evans, White and Lee"
+2024-05-20,customer5@mail.com,deposit,2000.0,2264.94,salary,Solar
+2024-05-20,customer5@mail.com,credit,550.0,1714.94,apartment rent,Mark Robertson
+2024-05-20,customer5@mail.com,credit,36.35,1678.59,internet & TV,Rhodes Inc
+2024-05-20,customer5@mail.com,credit,10.9,1667.69,services,"Chandler, Lewis and Barton"
+2024-05-20,customer5@mail.com,credit,21.62,1646.07,mobile phone,Stark PLC
+2024-05-20,customer5@mail.com,credit,43.34,1602.73,mobile phone,Bell-Sutton
+2024-05-20,customer5@mail.com,credit,202.91,1399.82,car maintenance,Pierce PLC
+2024-05-21,customer5@mail.com,credit,98.81,1301.01,restaurants,Williams-Watson
+2024-05-21,customer5@mail.com,credit,55.17,1245.84,restaurants,Harrell-Johnson
+2024-05-21,customer5@mail.com,credit,58.04,1187.8,restaurants,Pace-Martinez
+2024-05-21,customer5@mail.com,credit,16.96,1170.84,mobile phone,Jennings-Ellis
+2024-05-21,customer5@mail.com,credit,24.9,1145.94,groceries,"Becker, Haynes and Simpson"
+2024-05-22,customer5@mail.com,credit,69.39,1076.55,communal services,"Smith, Foster and Watts"
+2024-05-22,customer5@mail.com,credit,20.33,1056.22,entertainment,Romero-Walton
+2024-05-22,customer5@mail.com,credit,91.57,964.65,restaurants,Navarro LLC
+2024-05-22,customer5@mail.com,credit,73.56,891.09,car maintenance,Thornton-Atkins
+2024-05-22,customer5@mail.com,credit,18.35,872.74,culture,Hill Group
+2024-05-23,customer5@mail.com,credit,41.79,830.95,groceries,Gonzalez-Christian
+2024-05-23,customer5@mail.com,credit,67.14,763.81,medicine,Garcia-Keith
+2024-05-23,customer5@mail.com,credit,29.09,734.72,medicine,Holden Ltd
+2024-05-23,customer5@mail.com,credit,47.25,687.47,household,Hill-Mitchell
+2024-05-23,customer5@mail.com,credit,51.51,635.96,groceries,"Cline, Roberson and Smith"
+2024-05-24,customer5@mail.com,credit,109.28,526.68,communal services,Clark Inc
+2024-06-01,customer5@mail.com,credit,20.85,505.83,education,"Jones, Rodgers and Sparks"
+2024-06-01,customer5@mail.com,credit,27.22,478.61,internet & TV,"Hansen, Mccoy and Young"
+2024-06-01,customer5@mail.com,credit,30.49,448.12,services,Doyle-Lawson
+2024-06-01,customer5@mail.com,credit,10.8,437.32,taxi,Rodriguez-Williams
+2024-06-01,customer5@mail.com,credit,27.1,410.22,education,Reyes PLC
+2024-06-03,customer5@mail.com,credit,155.71,254.51,insurance,Snow PLC
+2024-06-05,customer5@mail.com,deposit,1500.0,1754.51,salary,Solar
+2024-06-05,customer5@mail.com,credit,20.58,1733.93,culture,"Garner, Aguilar and Rosales"
+2024-06-05,customer5@mail.com,credit,52.83,1681.1,medicine,Harvey-Shaw
+2024-06-05,customer5@mail.com,credit,130.05,1551.05,car maintenance,Mckinney-Anderson
+2024-06-05,customer5@mail.com,credit,13.51,1537.54,taxi,Leblanc-Vaughan
+2024-06-05,customer5@mail.com,credit,110.32,1427.22,car maintenance,"Brown, Williams and Hickman"
+2024-06-06,customer5@mail.com,credit,56.84,1370.38,children education,"Allen, Garcia and Williams"
+2024-06-06,customer5@mail.com,credit,18.95,1351.43,household,"Perez, Mendoza and Carrillo"
+2024-06-06,customer5@mail.com,credit,13.55,1337.88,taxi,Harris Ltd
+2024-06-06,customer5@mail.com,credit,49.68,1288.2,fuel,Powell Inc
+2024-06-06,customer5@mail.com,credit,31.81,1256.39,groceries,Miller-Mason
+2024-06-07,customer5@mail.com,credit,12.08,1244.31,internet & TV,"Bowen, Stevens and Stevens"
+2024-06-07,customer5@mail.com,credit,26.01,1218.3,mobile phone,"Andrews, Park and Gay"
+2024-06-07,customer5@mail.com,credit,36.26,1182.04,groceries,Cook Inc
+2024-06-07,customer5@mail.com,credit,14.26,1167.78,education,Rose and Sons
+2024-06-07,customer5@mail.com,credit,57.95,1109.83,children education,Olson-Smith
+2024-06-08,customer5@mail.com,credit,29.55,1080.28,medicine,"Clark, Henderson and Baker"
+2024-06-08,customer5@mail.com,credit,227.71,852.57,car maintenance,Jones-Richmond
+2024-06-08,customer5@mail.com,credit,142.91,709.66,car maintenance,Lee Inc
+2024-06-08,customer5@mail.com,credit,16.04,693.62,culture,Davies Ltd
+2024-06-08,customer5@mail.com,credit,15.14,678.48,services,"Smith, Ingram and Roman"
+2024-06-09,customer5@mail.com,credit,46.99,631.49,fuel,"Spencer, Armstrong and Webb"
+2024-06-09,customer5@mail.com,credit,38.89,592.6,culture,Perez Ltd
+2024-06-09,customer5@mail.com,credit,2.63,589.97,public transport,Fisher Ltd
+2024-06-09,customer5@mail.com,credit,2.09,587.88,public transport,Wallace LLC
+2024-06-09,customer5@mail.com,credit,48.67,539.21,education,"Diaz, Wilson and Mann"
+2024-06-10,customer5@mail.com,credit,27.42,511.79,fuel,Hall PLC
+2024-06-10,customer5@mail.com,credit,191.33,320.46,car maintenance,Hayes-Wood
+2024-06-12,customer5@mail.com,credit,31.81,288.65,entertainment,Little-Gamble
+2024-06-20,customer5@mail.com,deposit,2000.0,2288.65,salary,Solar
+2024-06-20,customer5@mail.com,credit,550.0,1738.65,apartment rent,Megan Thompson
+2024-06-20,customer5@mail.com,credit,19.67,1718.98,entertainment,"Vazquez, Williams and Townsend"
+2024-06-20,customer5@mail.com,credit,29.27,1689.71,services,Rodriguez Inc
+2024-06-20,customer5@mail.com,credit,19.04,1670.67,culture,Scott Ltd
+2024-06-20,customer5@mail.com,credit,60.23,1610.44,medicine,"Burke, Christensen and Campos"
+2024-06-20,customer5@mail.com,credit,12.41,1598.03,household,Hanson-Fernandez
+2024-06-21,customer5@mail.com,credit,16.3,1581.73,internet & TV,Turner-Thompson
+2024-06-21,customer5@mail.com,credit,2.8,1578.93,public transport,Cooper Inc
+2024-06-21,customer5@mail.com,credit,47.92,1531.01,medicine,"Garcia, Sandoval and Davis"
+2024-06-21,customer5@mail.com,credit,58.49,1472.52,communal services,"Garcia, Hughes and Arnold"
+2024-06-21,customer5@mail.com,credit,39.12,1433.4,groceries,"Zhang, Lang and Lam"
+2024-06-22,customer5@mail.com,credit,15.76,1417.64,fuel,"Smith, Larson and Diaz"
+2024-06-22,customer5@mail.com,credit,26.97,1390.67,household,Wang Group
+2024-06-22,customer5@mail.com,credit,62.03,1328.64,medicine,Jones-Weiss
+2024-06-22,customer5@mail.com,credit,2.74,1325.9,public transport,"Lynch, Fox and Jackson"
+2024-06-22,customer5@mail.com,credit,16.27,1309.63,household,Gonzales-York
+2024-06-23,customer5@mail.com,credit,12.49,1297.14,taxi,Brown PLC
+2024-06-23,customer5@mail.com,credit,28.61,1268.53,culture,Bell LLC
+2024-06-23,customer5@mail.com,credit,7.23,1261.3,entertainment,"Flores, Mercer and Marquez"
+2024-06-23,customer5@mail.com,credit,55.58,1205.72,children education,Brady-Khan
+2024-06-23,customer5@mail.com,credit,83.59,1122.13,car maintenance,Carter PLC
+2024-06-24,customer5@mail.com,credit,6.59,1115.54,culture,Smith-Craig
+2024-06-24,customer5@mail.com,credit,34.34,1081.2,culture,"Peterson, Clayton and Wolfe"
+2024-06-24,customer5@mail.com,credit,107.09,974.11,communal services,Gates-Jackson
+2024-06-24,customer5@mail.com,credit,10.78,963.33,taxi,Peterson-George
+2024-06-24,customer5@mail.com,credit,30.43,932.9,entertainment,Le LLC
+2024-06-25,customer5@mail.com,credit,47.72,885.18,fuel,"Burnett, Allison and Cross"
+2024-06-25,customer5@mail.com,credit,125.52,759.66,restaurants,Smith and Sons
+2024-06-25,customer5@mail.com,credit,84.57,675.09,medicine,"Price, Alvarez and Howell"
+2024-06-25,customer5@mail.com,credit,13.02,662.07,taxi,Mathis-Martinez
+2024-06-25,customer5@mail.com,credit,18.77,643.3,household,Carson-Fowler
+2024-06-26,customer5@mail.com,credit,40.45,602.85,groceries,Johnson and Sons
+2024-06-26,customer5@mail.com,credit,21.67,581.18,internet & TV,Sanders and Sons

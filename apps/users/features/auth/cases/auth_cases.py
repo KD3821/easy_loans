@@ -26,6 +26,9 @@ class AuthCases:
     async def sign_in(self, data: SignIn) -> AuthResponse:
         user = await self._users_repo.get_full_user(data.email)
 
+        if not user:
+            raise AppException("auth.user_not_found")
+
         if not user.is_verified:
             raise AppException("auth.user_not_verified")
 
