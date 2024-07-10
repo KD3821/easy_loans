@@ -1,11 +1,11 @@
 from decimal import Decimal
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, ConfigDict
 
 
 class ReportSettingsCreate(BaseModel):
-    customer_email: EmailStr
+    customer_id: int
     monthly_income: Decimal
     employer: str
 
@@ -21,4 +21,8 @@ class ReportSettings(ReportSettingsCreate):
     rental_rate: Decimal
     have_risks: bool
     created_at: datetime
-    updated_at: datetime | None
+
+
+class ReportSettingsUpdate(BaseModel):
+    monthly_income: Decimal | None
+    employer: str | None

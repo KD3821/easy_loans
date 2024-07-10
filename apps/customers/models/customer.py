@@ -1,9 +1,10 @@
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from sqlalchemy import Column, Integer, String, DateTime, Date, Boolean, Numeric
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import Base
+from apps.reports.models import ReportSettings  # for relationship
+from apps.loans.models import Loan  # for relationship
 
 
 class Customer(Base):

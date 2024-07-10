@@ -1,3 +1,4 @@
+from decimal import Decimal
 from datetime import datetime, timedelta
 
 from pydantic import BaseModel, EmailStr, field_validator
@@ -11,6 +12,8 @@ class CustomerUpdate(BaseModel):
     education: str = None
     children: int = None
     self_employed: bool = None
+    employer: str = None
+    monthly_income: Decimal = None
     property_area: str = None
     credit_history: bool = None
 

@@ -6,7 +6,7 @@ from db import Base
 
 
 class ReportSettings(Base):
-    __table__ = "report_settings"
+    __tablename__ = "reportsettings"
 
     # PCT is for percentage from monthly_income
     FIRST_INCOME_PCT = 40
@@ -24,7 +24,7 @@ class ReportSettings(Base):
     )
 
     id = Column(Integer, primary_key=True)
-    customer_email = Column(String(128), ForeignKey('customers.email'))
+    customer_id = Column(Integer, ForeignKey('customers.id'))
     monthly_income = Column(Numeric(8, 2))
     starting_balance = Column(Numeric(8, 2))
     save_balance = Column(Numeric(8, 2))

@@ -55,7 +55,7 @@ class CustomerStorage:
                 education=customer.education,
                 children=customer.children,
                 self_employed=customer.self_employed,
-                employer=customer.empoyer,
+                employer=customer.employer,
                 monthly_income=customer.monthly_income,
                 property_area=customer.property_area,
                 credit_history=customer.credit_history,
