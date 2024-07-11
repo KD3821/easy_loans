@@ -16,5 +16,4 @@ class TransactionCases:
         elif file.filename.endswith('.xlsx'):
             return await self._transaction_repo.import_xlsx(file)
 
-        else:
-            raise AppException("upload_file.unsupported_file_type")
+        raise AppException("upload_file.unsupported_file_type")

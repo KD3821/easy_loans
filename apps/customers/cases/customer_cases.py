@@ -29,7 +29,8 @@ class CustomerCases:
             rs_data = ReportSettingsUpdate(
                 monthly_income=data.monthly_income, employer=data.employer
             )
-            await self._report_settings_repo.update(customer_id, rs_data)
+            rs = await self._report_settings_repo.update(customer_id, rs_data)
+            print(f"{rs=}")
         return updated_customer
 
     async def delete(self, customer_id: int) -> Customer:

@@ -39,27 +39,26 @@ fake_first_income = 1500.0
 fake_second_income = 2000.0
 fake_save_balance = 30.0
 
-# (email, month_salary, starting_balance, day_of_first_income, day_of_second_income, rental_rate, employer, have_risk)
+# (customer_id, month_salary, starting_balance, day_of_first_income, day_of_second_income, rental_rate, employer, have_risk)
 fake_customer_data = (
-    ("customer4@mail.com", 3500.0, 450.0, 10, 25, 600.0, "Campbell&Co", 1),
-    ("customer5@mail.com", 3500.0, 600.0, 5, 20, 550.0, "Solar", 0),
-    ("customer6@mail.com", 3500.0, 800.0, 7, 22, 700.0, "NewEra", 0),
+    (1, 3500.0, 450.0, 10, 25, 600.0, "Campbell&Co", 1),
+    (2, 3500.0, 600.0, 5, 20, 550.0, "Solar", 0),
+    (3, 3500.0, 800.0, 7, 22, 700.0, "NewEra", 0),
 )
 
 fake_report_dates = (
-    ('2024-05-01', '2024-05-31'), ('2024-06-01', '2024-06-30')
+    (date(2024, 6, 1), date(2024, 6, 30)), (date(2024, 7, 1), date(2024, 7, 31)),
 )
 
 
-def create_fake_txns(data, dates_list, first_income, second_income, save_balance, risks) -> list:
-    email, salary, init_balance, first, second, rent, company, risk = data
+def create_fake_txns(data, dates_list, first_income, second_income, save_balance, risks):
+    customer_id, salary, init_balance, first, second, rent, company, risk = data
     balance = init_balance
+    fixed_finish_date = None
     transactions = []
     for dates in dates_list:
         txn_list = []
-        start, end = dates
-        start_date = date(*[int(i) for i in start.split('-')])
-        finish_date = date(*[int(i) for i in end.split('-')])
+        start_date, finish_date = dates
         saving = False
         stop_spending = False
         current = start_date
@@ -77,7 +76,7 @@ def create_fake_txns(data, dates_list, first_income, second_income, save_balance
                 txn_list.append(
                     {
                         "date": current,
-                        "email": email,
+                        "customer_id": customer_id,
                         "type": "deposit",
                         "amount": income,
                         "balance": balance,
@@ -90,7 +89,7 @@ def create_fake_txns(data, dates_list, first_income, second_income, save_balance
                     txn_list.append(
                         {
                             "date": current,
-                            "email": email,
+                            "customer_id": customer_id,
                             "type": "credit",
                             "amount": rent,
                             "balance": balance,
@@ -118,7 +117,7 @@ def create_fake_txns(data, dates_list, first_income, second_income, save_balance
                     balance = new_balance
                     txn = {
                         "date": current,
-                        "email": email,
+                        "customer_id": customer_id,
                         "type": "credit",
                         "amount": amount,
                         "balance": balance,
@@ -128,7 +127,9 @@ def create_fake_txns(data, dates_list, first_income, second_income, save_balance
                     txn_list.append(txn)
                     txn_available -= 1
             current = current + timedelta(days=1)
-        print(*txn_list, sep="\n")
+            if current == date.today() + timedelta(days=1):
+                fixed_finish_date = (current - timedelta(days=1)).strftime("%Y-%m-%d")
+                break
         if risk:
             rs_txns = random.randint(1, 5)
             while rs_txns:
@@ -142,11 +143,11 @@ def create_fake_txns(data, dates_list, first_income, second_income, save_balance
                         rs_txns -= 1
                         break
         transactions.extend(txn_list)
-    return transactions
+    return transactions, fixed_finish_date
 
 
 def create_csv_report(data, dates, first_income, second_income, save_balance, risks):
-    txns = create_fake_txns(
+    txns, fixed_date = create_fake_txns(
         data=data,
         dates_list=dates,
         first_income=first_income,
@@ -154,26 +155,35 @@ def create_csv_report(data, dates, first_income, second_income, save_balance, ri
         save_balance=save_balance,
         risks=risks
     )
-    customer = data[0].split("@")[0]
+
     dir_path = Path(f"uploaded_reports")
     if not os.path.exists(dir_path):
         dir_path.mkdir(parents=True)
-    file_path = os.path.join(dir_path, f"{customer}_report.csv")
+
+    customer_id = data[0]
+    date_start = dates[0][0]
+    if fixed_date is not None:
+        date_finish = fixed_date
+    else:
+        date_finish = dates[-1][-1]
+    file_path = os.path.join(dir_path, f"report_{customer_id}_{date_start}_{date_finish}.csv")
     with open(file_path, "w", newline="") as file:
         writer = csv.DictWriter(
             file,
-            fieldnames=["date", "email", "type", "amount", "balance", "category", "details"]
+            fieldnames=["date", "customer_id", "type", "amount", "balance", "category", "details"]
         )
         writer.writeheader()
         writer.writerows(txns)
 
+    return file
 
-for obj in fake_customer_data:
-    create_csv_report(
-        data=obj,
-        dates=fake_report_dates,
-        first_income=fake_first_income,
-        second_income=fake_second_income,
-        save_balance=fake_save_balance,
-        risks=fake_risks
-    )
+
+# for obj in fake_customer_data:
+#     create_csv_report(
+#         data=obj,
+#         dates=fake_report_dates,
+#         first_income=fake_first_income,
+#         second_income=fake_second_income,
+#         save_balance=fake_save_balance,
+#         risks=fake_risks
+#     )

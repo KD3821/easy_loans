@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Numeric, Date
+from sqlalchemy import Column, Integer, String, Numeric, Date, ForeignKey
 
 from db import Base
 
@@ -8,7 +8,7 @@ class Transaction(Base):
 
     id = Column(Integer, primary_key=True)
     date = Column(Date)
-    email = Column(String)
+    customer_id = Column(Integer, ForeignKey("customers.id"))
     type = Column(String)
     amount = Column(Numeric(8, 2))
     balance = Column(Numeric(8, 2))

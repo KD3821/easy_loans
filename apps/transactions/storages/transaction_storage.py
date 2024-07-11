@@ -5,10 +5,34 @@ from fastapi import UploadFile
 from db import async_session
 from ..schemas import NewTransaction, ReportUploaded
 from ..models import Transaction as TransactionModel
+from scripts.seeds.transactions import create_csv_report
+from apps.reports.schemas import ReportDates, ReportSettingsGenerate
 
 
 class TransactionStorage:
     _table = TransactionModel
+
+    @classmethod
+    async def generate_csv(cls, rs: ReportSettingsGenerate, dates: ReportDates):
+        data = (
+            rs.customer_id,
+            float(rs.monthly_income),
+            float(rs.starting_balance),
+            rs.first_income_day,
+            rs.second_income_day,
+            float(rs.rental_rate),
+            rs.employer,
+            rs.have_risks
+        )
+        file = create_csv_report(
+            data=data,
+            dates=[(dates.start_date, dates.finish_date)],
+            first_income=float(rs.first_income),
+            second_income=float(rs.second_income),
+            save_balance=float(rs.save_balance),
+            risks=rs.risks
+        )
+        return file.name
 
     @classmethod
     async def import_csv(cls, file: UploadFile) -> ReportUploaded:
