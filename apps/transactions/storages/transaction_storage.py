@@ -24,15 +24,15 @@ class TransactionStorage:
             rs.employer,
             rs.have_risks
         )
-        file = create_csv_report(
+        filepath, filename = create_csv_report(
             data=data,
-            dates=[(dates.start_date, dates.finish_date)],
+            dates=[dates.start_date, dates.finish_date],
             first_income=float(rs.first_income),
             second_income=float(rs.second_income),
             save_balance=float(rs.save_balance),
             risks=rs.risks
         )
-        return file.name
+        return filepath, filename
 
     @classmethod
     async def import_csv(cls, file: UploadFile) -> ReportUploaded:

@@ -19,9 +19,14 @@ router = APIRouter(
 
 @router.post("/reports/{customer_id}", response_class=FileResponse)
 @inject
-async def generate_report(
+async def generate_csv_report(
     customer_id: int,
     report_dates: ReportDates,
     report_cases: ReportCases = Depends(Provide[Container.report_cases])
 ):
-    return await report_cases.generate(customer_id, report_dates)
+    filepath, filename = await report_cases.generate(customer_id, report_dates)
+    return FileResponse(
+        filepath,
+        media_type='application/csv',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'},
+    )

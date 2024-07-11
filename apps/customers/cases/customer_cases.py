@@ -17,20 +17,23 @@ class CustomerCases:
 
     async def create(self, data: NewCustomer) -> Customer:
         new_customer = await self._customer_repo.create(data)
+
         rs_data = ReportSettingsCreate(
             customer_id=new_customer.id, monthly_income=new_customer.monthly_income, employer=new_customer.employer
         )
         await self._report_settings_repo.create(rs_data)
+
         return new_customer
 
     async def update(self, customer_id: int, data: CustomerUpdate) -> Customer:
         updated_customer = await self._customer_repo.update(customer_id, data)
+
         if data.monthly_income is not None or data.employer is not None:
             rs_data = ReportSettingsUpdate(
                 monthly_income=data.monthly_income, employer=data.employer
             )
-            rs = await self._report_settings_repo.update(customer_id, rs_data)
-            print(f"{rs=}")
+            await self._report_settings_repo.update(customer_id, rs_data)
+
         return updated_customer
 
     async def delete(self, customer_id: int) -> Customer:
