@@ -33,13 +33,14 @@ fake_risks = (
     ("online bookmaker", "1xBet"),
     ("microfinance", "Credit Expert"),
     ("online gambling", "Casino 777"),
+    ("online gambling", "PokerStars"),
 )
 
 fake_first_income = 1500.0
 fake_second_income = 2000.0
 fake_save_balance = 30.0
 
-# (customer_id, month_salary, starting_balance, day_of_first_income, day_of_second_income, rental_rate, employer, have_risk)
+# (customer_id, month_salary, starting_balance, first_income_day, second_income_day, rental_rate, employer, have_risk)
 fake_customer_data = (
     (1, 3500.0, 450.0, 10, 25, 600.0, "Campbell&Co", 1),
     (2, 3500.0, 600.0, 5, 20, 550.0, "Solar", 0),
@@ -188,5 +189,4 @@ def create_csv_report(data, dates, first_income, second_income, save_balance, ri
 #         second_income=fake_second_income,
 #         save_balance=fake_save_balance,
 #         risks=fake_risks
-#         seeds=True
 #     )

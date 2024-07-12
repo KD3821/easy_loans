@@ -28,6 +28,10 @@ flask-admin = "*"
 pytz = "*"
 werkzeug = "==2.2.2"
 faker = "*"
+celery = "==5.3.6"
+aio-pika = "==9.4.1"
+aiormq = "==6.8.0"
+flower = "*"
 
 [dev-packages]
 pre-commit = "*"

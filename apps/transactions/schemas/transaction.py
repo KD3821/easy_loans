@@ -22,6 +22,6 @@ class NewTransaction(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class Transaction(NewTransaction):
+class Transaction(NewTransaction):  # todo check if needed
 
     id: int

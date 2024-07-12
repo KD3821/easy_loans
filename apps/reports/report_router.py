@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, UploadFile
 from fastapi.responses import FileResponse
 from dependency_injector.wiring import inject, Provide
 
 from core import BaseRoute, IsAuthenticated, ErrorDetails
 from .cases.report_cases import ReportCases
-from .schemas import ReportDates
+from .schemas import ReportDates, ReportUploaded
 from .containers import Container
 
 router = APIRouter(
@@ -17,9 +17,19 @@ router = APIRouter(
 )
 
 
-@router.post("/reports/{customer_id}", response_class=FileResponse)
+@router.post("/reports/{customer_id}", response_model=ReportUploaded)
 @inject
-async def generate_csv_report(
+async def create_report(
+    customer_id: int,
+    file: UploadFile = File(...),
+    report_cases: ReportCases = Depends(Provide[Container.report_cases])
+):
+    return await report_cases.create_report(customer_id, file)
+
+
+@router.post("/reports/{customer_id}/csv", response_class=FileResponse)
+@inject
+async def generate_transactions_csv(
     customer_id: int,
     report_dates: ReportDates,
     report_cases: ReportCases = Depends(Provide[Container.report_cases])
@@ -28,5 +38,5 @@ async def generate_csv_report(
     return FileResponse(
         filepath,
         media_type='application/csv',
-        headers={'Content-Disposition': f'attachment; filename="{filename}"'},
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'}
     )

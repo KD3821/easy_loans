@@ -1,8 +1,8 @@
 from .transaction import NewTransaction, Transaction
-from .report_file import ReportUploaded
+from .transaction_upload import TransactionUpload
 
 __all__ = (
     "NewTransaction",
     "Transaction",
-    "ReportUploaded",
+    "TransactionUpload",
 )

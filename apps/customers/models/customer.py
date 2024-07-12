@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, String, DateTime, Date, Boolean, Numeric
 
 from db import Base
 from apps.reports.models import ReportSettings, Report  # for relationship
-from apps.loans.models import Loan  # for relationship
+# from apps.loans.models import Loan  # for relationship
 
 
 class Customer(Base):
@@ -36,6 +36,7 @@ class Customer(Base):
     credit_history = Column(Boolean)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    loans = relationship("Loan", back_populates="customer")
+    # loans = relationship("Loan", back_populates="customer")
     report_settings = relationship("ReportSettings", back_populates="customer")
     reports = relationship("Report", back_populates="customer")
+    transaction_uploads = relationship("TransactionUpload")

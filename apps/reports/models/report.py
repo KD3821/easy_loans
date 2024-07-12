@@ -21,7 +21,7 @@ class Report(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     customer = relationship("Customer", back_populates="reports")
 
-    # @property
+    # todo add this logic:
     # def balance(self):
     #     if self.debit is None:
     #         self.debit = Decimal("0.00")
