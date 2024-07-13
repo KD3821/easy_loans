@@ -1,9 +1,11 @@
+from typing import List
+
 from fastapi import UploadFile
 from pydantic import ValidationError
 
 from core import AppException
-
 from apps.transactions.storages import TransactionStorage
+from apps.transactions.schemas import TransactionUpload
 from ..schemas import ReportDates, ReportUploaded
 from ..storages import ReportStorage, ReportSettingsStorage
 from workers.celery_tasks import upload_csv_report
@@ -40,6 +42,7 @@ class ReportCases:
             "customer_id": customer_id,
             "start_date": start_date,
             "finish_date": finish_date,
+            "task_id": "N/A"
         }
 
         return valid_data
@@ -52,10 +55,20 @@ class ReportCases:
     async def create_report(self, customer_id: int, file: UploadFile) -> ReportUploaded:
         file_data = await self.check_filename(customer_id, file.filename)
 
-        task = upload_csv_report.delay(customer_id, file.file)
+        await self._transaction_repo.check_overlapping_dates(
+            customer_id,
+            ReportDates(start_date=file_data.get("start_date"), finish_date=file_data.get("finish_date"))
+        )
 
-        file_data.update({"task_id": task.id})
+        txn_upload = await self._transaction_repo.create_upload(file_data)
 
-        await self._transaction_repo.create_upload(file_data)
+        task = upload_csv_report.delay(customer_id, file.file, upload_id=txn_upload.id)
 
-        return ReportUploaded(filename=file.filename, task_id=task.id)
+        return ReportUploaded(id=txn_upload.id, filename=file.filename, task_id=task.id)
+
+    async def check_upload(self, customer_id: int, upload_id: int):
+        result = await self._transaction_repo.check_upload(customer_id, upload_id)
+        return result.info
+
+    async def get_uploads(self, customer_id: int) -> List[TransactionUpload]:
+        return await self._transaction_repo.get_uploads(customer_id)

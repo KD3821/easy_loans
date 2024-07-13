@@ -59,13 +59,20 @@ def create_fake_txns(data, dates, first_income, second_income, save_balance, ris
     transactions = []
     start_date, finish_date = dates
     saving = False
+    stop_spending = False
     if start_date.day > second:
         saving = True
-    stop_spending = False
+        if start_date.day <= second + 2:
+            balance = init_balance * 3
+        elif start_date.day <= second + 5:
+            balance = init_balance * 1.5
     current = start_date
     while current <= finish_date:
         txn_available = 5
-        if current.day in (first, second):
+        if current.day == 1:
+            saving = False
+            stop_spending = False
+        elif current.day in (first, second):
             stop_spending = False
             if current.day == first:
                 balance += first_income

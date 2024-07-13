@@ -20,5 +20,6 @@ class ReportDates(BaseModel):
 
 
 class ReportUploaded(BaseModel):
+    id: int
     filename: str
     task_id: str

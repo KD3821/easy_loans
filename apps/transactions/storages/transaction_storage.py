@@ -1,4 +1,7 @@
+from typing import List
+
 from sqlalchemy import select, or_, and_
+from celery.result import AsyncResult
 
 from db import async_session
 from core.exceptions import AppException
@@ -15,6 +18,7 @@ class TransactionStorage:
 
     @classmethod
     async def check_overlapping_dates(cls, customer_id: int, dates: ReportDates) -> ReportDates:
+        overlap_exc = AppException("generate_csv.overlapping_existing_reports")
         async with async_session() as session:
             query = await session.execute(
                 select(cls._upload_table).where(
@@ -35,7 +39,7 @@ class TransactionStorage:
             partial_overlap = query.scalar()
 
             if partial_overlap:
-                raise AppException("gen_csv.partial_overlapping_existing_reports")
+                raise overlap_exc
 
             query = await session.execute(
                 select(cls._upload_table).filter(
@@ -49,7 +53,7 @@ class TransactionStorage:
             total_overlap = query.scalar()
 
             if total_overlap:
-                raise AppException("gen_csv.total_overlapping_existing_reports")
+                raise overlap_exc
         return dates
 
     @classmethod
@@ -85,3 +89,31 @@ class TransactionStorage:
             await session.commit()
 
         return new_txn_upload
+
+    @classmethod
+    async def check_upload(cls, customer_id: int, upload_id: int) -> AsyncResult:
+        async with async_session() as session:
+            query = await session.execute(
+                select(cls._upload_table).where(
+                    and_(
+                        cls._upload_table.id == upload_id,
+                        cls._upload_table.customer_id == customer_id
+                    )
+                )
+            )
+            upload = query.scalars().first()
+
+            if upload is None:
+                raise AppException("check_upload.upload_not_found")
+
+        return AsyncResult(upload.task_id)
+
+    @classmethod
+    async def get_uploads(cls, customer_id: int) -> List[TransactionUploadModel]:
+        async with async_session() as session:
+            query = await session.execute(
+                select(cls._upload_table).filter(cls._upload_table.customer_id == customer_id)
+            )
+            uploads = query.scalars()
+
+        return uploads
