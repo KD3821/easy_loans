@@ -1,8 +1,8 @@
-from datetime import datetime
+from datetime import date
 from enum import Enum
 from decimal import Decimal
 
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, ConfigDict
 
 
 class TransactionType(str, Enum):
@@ -11,8 +11,8 @@ class TransactionType(str, Enum):
 
 
 class NewTransaction(BaseModel):
-    date: datetime
-    email: EmailStr
+    date: date
+    customer_id: int
     type: TransactionType
     amount: Decimal
     balance: Decimal
@@ -22,6 +22,6 @@ class NewTransaction(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class Transaction(NewTransaction):
+class Transaction(NewTransaction):  # todo check if needed
 
     id: int

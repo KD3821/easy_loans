@@ -5,11 +5,42 @@ from sqlalchemy import select
 
 from db import async_session
 from ..models.report_settings import ReportSettings as ReportSettingsModel
-from ..schemas.report_settings import ReportSettingsCreate, ReportSettings, ReportSettingsUpdate
+from ..schemas.report_settings import (
+    ReportSettingsCreate,
+    ReportSettings,
+    ReportSettingsUpdate,
+    ReportSettingsGenerate
+)
 
 
 class ReportSettingsStorage:
     _table = ReportSettingsModel
+
+    @classmethod
+    async def get_report_settings(cls, customer_id: int) -> ReportSettingsGenerate:
+        async with async_session() as session:
+            query = await session.execute(
+                select(cls._table).filter(cls._table.customer_id == customer_id)
+            )
+            report_settings = query.scalars().first()
+
+            first_income = report_settings.monthly_income * cls._table.FIRST_INCOME_PCT / 100
+            second_income = report_settings.monthly_income * cls._table.SECOND_INCOME_PCT / 100
+
+        return ReportSettingsGenerate(
+            customer_id=report_settings.customer_id,
+            monthly_income=report_settings.monthly_income,
+            employer=report_settings.employer,
+            starting_balance=report_settings.starting_balance,
+            save_balance=report_settings.save_balance,
+            first_income_day=report_settings.first_income_day,
+            second_income_day=report_settings.second_income_day,
+            rental_rate=report_settings.rental_rate,
+            have_risks=report_settings.have_risks,
+            first_income=first_income,
+            second_income=second_income,
+            risks=cls._table.RISKS
+        )
 
     @classmethod
     async def calculate_settings(cls, monthly_income: Decimal) -> dict:

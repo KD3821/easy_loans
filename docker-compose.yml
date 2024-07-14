@@ -20,3 +20,12 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+  broker:
+    image: rabbitmq:3-management
+    restart: unless-stopped
+    container_name: loans_broker
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    expose:
+      - 5672

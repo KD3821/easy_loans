@@ -46,3 +46,7 @@ AUTH_REFRESH_TOKEN_EXPIRE_MINUTES = int(
 APP_VERSION = "0.1"
 APP_API_NAME = "Python Template API"
 APP_ADMIN_NAME = "Python Template Admin"
+
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
+CELERY_ACCEPT_CONTENT = ['pickle', 'json']
+AMQP_DSN = os.environ.get("AMQP_DSN")
