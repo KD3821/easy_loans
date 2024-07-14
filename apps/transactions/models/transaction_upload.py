@@ -21,4 +21,4 @@ class TransactionUpload(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     customer = relationship("Customer", back_populates="transaction_uploads")
-    transactions = relationship("Transaction")
+    transactions = relationship("Transaction", back_populates="upload", cascade="all, delete", passive_deletes=True)

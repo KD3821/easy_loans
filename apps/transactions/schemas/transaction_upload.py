@@ -8,3 +8,8 @@ class TransactionUpload(BaseModel):
     task_id: str
     start_date: date
     finish_date: date
+
+
+class TransactionUploadCompleted(TransactionUpload):
+    id: int
+    status: str

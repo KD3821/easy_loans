@@ -2,7 +2,7 @@ import csv
 from datetime import datetime
 
 from sqlalchemy.orm import registry, Session
-from sqlalchemy import MetaData, Table, create_engine, select
+from sqlalchemy import MetaData, Table, create_engine, select, and_
 from settings import DB_USER, DB_PASS, DB_HOST, DB_PORT, DB_NAME
 
 from .schemas import TransactionCelery
@@ -44,10 +44,35 @@ def upload_transactions(customer_id, file_data, upload_id, task_id):
         txn_upload = query.scalars().first()
 
         txn_upload.task_id = task_id
-        txn_upload.status = "completed"  # hardcoded
+        txn_upload.status = "completed"  # fixme hardcoded
         txn_upload.updated_at = datetime.utcnow()
 
         session.add_all(transactions)
         session.commit()
 
     return {"customer_id": customer_id, "upload_id": upload_id, "total_uploaded": len(transactions)}
+
+
+def delete_transactions(customer_id, upload_id):
+    metadata = MetaData()
+    transaction_upload_table = Table("transaction_uploads", metadata, autoload_with=engine)
+    MappedClassUPLOAD = type('MappedClassUPLOAD', (), {})
+    mapper_registry = registry()
+    mapper_registry.map_imperatively(MappedClassUPLOAD, transaction_upload_table) # noqa (to avoid circular import)
+
+    with Session(engine) as session:
+        query = session.execute(
+            select(MappedClassUPLOAD)
+            .where(
+                and_(
+                    MappedClassUPLOAD.id == upload_id,
+                    MappedClassUPLOAD.customer_id == customer_id
+                )
+            )
+        )
+        txn_upload = query.scalars().first()
+
+        session.delete(txn_upload)
+        session.commit()
+
+    return {"customer_id": customer_id, "deleted_upload_id": upload_id}

@@ -1,5 +1,5 @@
 from .report_settings import ReportSettings, ReportSettingsCreate, ReportSettingsUpdate, ReportSettingsGenerate
-from .report import ReportDates, ReportUploaded
+from .report import ReportDates, ReportUploaded, ReportStatus, ReportDeleted
 
 __all__ = (
     "ReportSettings",
@@ -8,4 +8,6 @@ __all__ = (
     "ReportDates",
     "ReportSettingsGenerate",
     "ReportUploaded",
+    "ReportStatus",
+    "ReportDeleted",
 )

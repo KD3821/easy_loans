@@ -54,6 +54,7 @@ class TransactionStorage:
 
             if total_overlap:
                 raise overlap_exc
+
         return dates
 
     @classmethod
@@ -91,7 +92,13 @@ class TransactionStorage:
         return new_txn_upload
 
     @classmethod
-    async def check_upload(cls, customer_id: int, upload_id: int) -> AsyncResult:
+    async def check_upload_status(cls, customer_id: int, upload_id: int) -> dict:
+        upload = await cls.get_upload(customer_id, upload_id)
+
+        return {"status": upload.status, "result": AsyncResult(upload.task_id)}
+
+    @classmethod
+    async def get_upload(cls, customer_id: int, upload_id: int) -> TransactionUploadModel:
         async with async_session() as session:
             query = await session.execute(
                 select(cls._upload_table).where(
@@ -103,10 +110,10 @@ class TransactionStorage:
             )
             upload = query.scalars().first()
 
-            if upload is None:
-                raise AppException("check_upload.upload_not_found")
+        if upload is None:
+            raise AppException("check_upload.upload_not_found")
 
-        return AsyncResult(upload.task_id)
+        return upload
 
     @classmethod
     async def get_uploads(cls, customer_id: int) -> List[TransactionUploadModel]:

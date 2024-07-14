@@ -5,10 +5,10 @@ from pydantic import ValidationError
 
 from core import AppException
 from apps.transactions.storages import TransactionStorage
-from apps.transactions.schemas import TransactionUpload
-from ..schemas import ReportDates, ReportUploaded
+from apps.transactions.schemas import TransactionUploadCompleted
+from ..schemas import ReportDates, ReportUploaded, ReportStatus, ReportDeleted
 from ..storages import ReportStorage, ReportSettingsStorage
-from workers.celery_tasks import upload_csv_report
+from workers.celery_tasks import upload_csv_report, delete_uploaded_report
 
 
 class ReportCases:
@@ -52,7 +52,7 @@ class ReportCases:
 
         return await self._transaction_repo.generate_csv(gen_data, dates)
 
-    async def create_report(self, customer_id: int, file: UploadFile) -> ReportUploaded:
+    async def create_upload(self, customer_id: int, file: UploadFile) -> ReportUploaded:
         file_data = await self.check_filename(customer_id, file.filename)
 
         await self._transaction_repo.check_overlapping_dates(
@@ -66,9 +66,23 @@ class ReportCases:
 
         return ReportUploaded(id=txn_upload.id, filename=file.filename, task_id=task.id)
 
-    async def check_upload(self, customer_id: int, upload_id: int):
-        result = await self._transaction_repo.check_upload(customer_id, upload_id)
-        return result.info
+    async def check_upload(self, customer_id: int, upload_id: int) -> ReportStatus:
+        upload_result = await self._transaction_repo.check_upload_status(customer_id, upload_id)
 
-    async def get_uploads(self, customer_id: int) -> List[TransactionUpload]:
+        return ReportStatus(
+            id=upload_id, status=upload_result.get("status"), result=upload_result.get("result").info
+        )
+
+    async def get_uploads(self, customer_id: int) -> List[TransactionUploadCompleted]:
         return await self._transaction_repo.get_uploads(customer_id)
+
+    async def delete_upload(self, customer_id: int, upload_id: int):
+        upload = await self._transaction_repo.get_upload(customer_id, upload_id)
+
+        task = delete_uploaded_report.delay(customer_id, upload.id)
+
+        return ReportDeleted(id=upload.id, task_id=task.id)
+
+    async def get_details(self, customer_id: int, upload_id: int):
+        # launch dag calculation
+        return {'upload_id': upload_id, 'details': {'customer_id': customer_id, 'info': 'OK'}}

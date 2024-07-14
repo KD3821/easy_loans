@@ -23,3 +23,14 @@ class ReportUploaded(BaseModel):
     id: int
     filename: str
     task_id: str
+
+
+class ReportStatus(BaseModel):
+    id: int
+    status: str
+    result: dict | None
+
+
+class ReportDeleted(BaseModel):
+    id: int
+    task_id: str

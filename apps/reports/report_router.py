@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse
 from dependency_injector.wiring import inject, Provide
 
 from core import BaseRoute, IsAuthenticated, ErrorDetails
-from apps.transactions.schemas import TransactionUpload
+from apps.transactions.schemas import TransactionUploadCompleted
 from .cases.report_cases import ReportCases
 from .schemas import ReportDates, ReportUploaded
 from .containers import Container
@@ -37,21 +37,41 @@ async def generate_transactions_csv(
 
 @router.post("/reports/{customer_id}/uploads", response_model=ReportUploaded)
 @inject
-async def create_report(
+async def create_upload(
     customer_id: int,
     file: UploadFile = File(...),
     report_cases: ReportCases = Depends(Provide[Container.report_cases])
 ):
-    return await report_cases.create_report(customer_id, file)
+    return await report_cases.create_upload(customer_id, file)
 
 
-@router.get("/reports/{customer_id}/uploads", response_model=List[TransactionUpload])
+@router.get("/reports/{customer_id}/uploads", response_model=List[TransactionUploadCompleted])
 @inject
 async def list_uploads(
     customer_id: int,
     report_cases: ReportCases = Depends(Provide[Container.report_cases])
 ):
     return await report_cases.get_uploads(customer_id)
+
+
+@router.get("/reports/{customer_id}/upload/{upload_id}")
+@inject
+async def get_upload_details(
+    customer_id: int,
+    upload_id: int,
+    report_cases: ReportCases = Depends(Provide[Container.report_cases])
+):
+    return await report_cases.get_details(customer_id, upload_id)
+
+
+@router.delete("/reports/{customer_id}/uploads/{upload_id}")
+@inject
+async def remove_upload(
+    customer_id: int,
+    upload_id: int,
+    report_cases: ReportCases = Depends(Provide[Container.report_cases])
+):
+    return await report_cases.delete_upload(customer_id, upload_id)
 
 
 @router.get("/reports/{customer_id}/uploads/{upload_id}/check")
