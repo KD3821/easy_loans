@@ -75,6 +75,7 @@ class ReportSettingsStorage:
 
             session.add(report_settings_model)
             await session.commit()
+            await session.refresh(report_settings_model)
 
         return ReportSettings.model_validate(report_settings_model)
 
