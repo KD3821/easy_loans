@@ -2,7 +2,6 @@ import os
 import json
 import pickle
 import logging
-from typing import NoReturn
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -10,12 +9,25 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, median_absolute_error, r2_score
+from sklearn.metrics import mean_squared_error, median_absolute_error, r2_score, accuracy_score
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.models import DAG
 from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
 
+
+_LOG = logging.getLogger()
+_LOG.addHandler(logging.StreamHandler())
+
+train_csv = "train_data.csv"
+datasets_dirname = "/home/dk/easy_loans/airflow/datasets"
+train_results_dirname = "/home/dk/easy_loans/airflow/train_results"
+
+BUCKET = "5e4f9aa0-52a3cd57-dc94-43c1-ae9a-f2724eeac656"
+DATA_PATH = "datasets/loan_prediction.pkl"
+TARGET = "Loan_Status"
+FEATURES = ["Loan_ID", "Gender", "Married", "Dependents", "Education", "Self_Employed", "ApplicantIncome",
+            "CoapplicantIncome", "LoanAmount", "Loan_Amount_Term", "Credit_History", "Property_Area", "Loan_Status"]
 
 DEFAULT_ARGS = {
     "owner": "Denis",
@@ -35,26 +47,12 @@ dag = DAG(
     default_args=DEFAULT_ARGS
 )
 
-_LOG = logging.getLogger()
-_LOG.addHandler(logging.StreamHandler())
 
-BUCKET = "5e4f9aa0-52a3cd57-dc94-43c1-ae9a-f2724eeac656"
-DATA_PATH = "datasets/loan_prediction.pkl"
-FEATURES = ["Loan_ID", "Gender", "Married", "Dependents", "Education", "Self_Employed", "ApplicantIncome",
-            "CoapplicantIncome", "LoanAmount", "Loan_Amount_Term", "Credit_History", "Property_Area", "Loan_Status"]
-TARGET = "Loan_Status"
-
-datasets_dirname = "/home/dk/easy_loans/airflow/datasets"
-train_csv = "train_data.csv"
-
-results_dirname = "/home/dk/easy_loans/airflow/results"
-
-
-def init() -> NoReturn:
+def init() -> None:
     _LOG.info("Train pipeline is initialized.")
 
 
-def get_data_from_csv() -> NoReturn:
+def get_data_from_csv() -> None:
     data = pd.read_csv(os.path.join(datasets_dirname, train_csv))
 
     s3_hook = S3Hook("s3_connector")
@@ -64,10 +62,10 @@ def get_data_from_csv() -> NoReturn:
     pickle_byte_obj = pickle.dumps(data)
     resource.Object(BUCKET, DATA_PATH).put(Body=pickle_byte_obj)
 
-    _LOG.info("Data download finished")
+    _LOG.info("Train data upload finished")
 
 
-def prepare_data() -> NoReturn:
+def prepare_data() -> None:
     s3_hook = S3Hook("s3_connector")
     file = s3_hook.download_file(key=DATA_PATH, bucket_name=BUCKET)
     data = pd.read_pickle(file)
@@ -88,7 +86,7 @@ def prepare_data() -> NoReturn:
 
     X = X.drop('Loan_ID', axis=1)
     y = X[TARGET]
-    X.drop(TARGET, axis=1)
+    X = X.drop(TARGET, axis=1)
 
     X = pd.get_dummies(X)
 
@@ -100,7 +98,7 @@ def prepare_data() -> NoReturn:
     for name, data in zip(["X_train", "X_test", "y_train", "y_test"],
                           [X_train, X_test, y_train, y_test]):
         pickle_byte_obj = pickle.dumps(data)
-        resource.Object(BUCKET, f"dataset/{name}.pkl").put(Body=pickle_byte_obj)
+        resource.Object(BUCKET, f"train_dataset/{name}.pkl").put(Body=pickle_byte_obj)
 
     _LOG.info("Data preparation finished")
 
@@ -109,38 +107,42 @@ def train_model() -> str:
     s3_hook = S3Hook("s3_connector")
     data = {}
     for name in ["X_train", "X_test", "y_train", "y_test"]:
-        file = s3_hook.download_file(key=f"dataset/{name}.pkl", bucket_name=BUCKET)
+        file = s3_hook.download_file(key=f"train_dataset/{name}.pkl", bucket_name=BUCKET)
         data[name] = pd.read_pickle(file)
+
+        pd.DataFrame(data[name]).to_csv(os.path.join('/home/dk/easy_loans/airflow/check_splits', f'{name}.csv'),
+                                        index=False)  # todo remove later
 
     model = LogisticRegression()
     model.fit(data["X_train"], data["y_train"])
     prediction = model.predict(data["X_test"])
 
     result = {}
+    result["accuracy_score"] = accuracy_score(data["y_test"], prediction)
     result["r2_score"] = r2_score(data["y_test"], prediction)
     result["rmse"] = mean_squared_error(data["y_test"], prediction) ** 0.5
     result["mae"] = median_absolute_error(data["y_test"], prediction)
 
-    date = datetime.now().strftime("%Y-%m-%d_%H-%M")
+    date = datetime.now().strftime("%H-%M-%S_%Y-%m-%d")
     session = s3_hook.get_session("ru-1")
     resource = session.resource("s3")
     json_byte_object = json.dumps(result)
-    resource.Object(BUCKET, f"results/{date}.json").put(Body=json_byte_object)
+    resource.Object(BUCKET, f"train_results/{date}.json").put(Body=json_byte_object)
 
     _LOG.info("Model training finished")
 
     return date
 
 
-def save_results(**kwargs) -> NoReturn:
-    dir_path = Path(results_dirname)
+def save_results(**kwargs) -> None:
+    dir_path = Path(train_results_dirname)
     if not os.path.exists(dir_path):
         dir_path.mkdir(parents=True)
 
     ti = kwargs.get("ti")
     name = ti.xcom_pull(task_ids="train_model")
     s3_hook = S3Hook("s3_connector")
-    result_file = s3_hook.download_file(key=f"results/{name}.json",
+    result_file = s3_hook.download_file(key=f"train_results/{name}.json",
                                         bucket_name=BUCKET,
                                         local_path=dir_path,
                                         preserve_file_name=True,

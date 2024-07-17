@@ -9,6 +9,7 @@ from apps.transactions.schemas import TransactionUploadCompleted
 from ..schemas import ReportDates, ReportUploaded, ReportStatus, ReportDeleted
 from ..storages import ReportStorage, ReportSettingsStorage
 from workers.celery_tasks import upload_csv_report, delete_uploaded_report
+from workers.dag_triggers import analyze_report
 
 
 class ReportCases:
@@ -83,6 +84,7 @@ class ReportCases:
 
         return ReportDeleted(id=upload.id, task_id=task.id)
 
-    async def get_details(self, customer_id: int, upload_id: int):
-        # launch dag calculation
-        return {'upload_id': upload_id, 'details': {'customer_id': customer_id, 'info': 'OK'}}
+    async def init_analysis(self, customer_id: int, upload_id: int):
+        analysis_id = await analyze_report(customer_id, upload_id)
+
+        return {'upload_id': upload_id, 'details': {'customer_id': customer_id, 'analysis_id': analysis_id}}

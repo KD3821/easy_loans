@@ -39,6 +39,7 @@ numpy = "*"
 scikit-learn = "*"
 scipy = "*"
 matplotlib = "*"
+httpx = "*"
 
 [dev-packages]
 pre-commit = "*"

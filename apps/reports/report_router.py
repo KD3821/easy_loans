@@ -54,14 +54,14 @@ async def list_uploads(
     return await report_cases.get_uploads(customer_id)
 
 
-@router.get("/reports/{customer_id}/upload/{upload_id}")
+@router.get("/reports/{customer_id}/upload/{upload_id}/analyse")
 @inject
-async def get_upload_details(
+async def analyse_upload(
     customer_id: int,
     upload_id: int,
     report_cases: ReportCases = Depends(Provide[Container.report_cases])
 ):
-    return await report_cases.get_details(customer_id, upload_id)
+    return await report_cases.init_analysis(customer_id, upload_id)
 
 
 @router.delete("/reports/{customer_id}/uploads/{upload_id}")

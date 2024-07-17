@@ -50,3 +50,7 @@ APP_ADMIN_NAME = "Python Template Admin"
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
 CELERY_ACCEPT_CONTENT = ['pickle', 'json']
 AMQP_DSN = os.environ.get("AMQP_DSN")
+
+AF_ADMIN = os.environ.get("AF_ADMIN")
+AF_PASS = os.environ.get("AF_PASS")
+AF_URL = os.environ.get("AF_URL")
