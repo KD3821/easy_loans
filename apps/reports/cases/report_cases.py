@@ -85,6 +85,8 @@ class ReportCases:
         return ReportDeleted(id=upload.id, task_id=task.id)
 
     async def init_analysis(self, customer_id: int, upload_id: int):
-        analysis_id = await analyze_report(customer_id, upload_id)
+        upload = await self._transaction_repo.get_upload(customer_id, upload_id)
+
+        analysis_id = await analyze_report(upload)
 
         return {'upload_id': upload_id, 'details': {'customer_id': customer_id, 'analysis_id': analysis_id}}

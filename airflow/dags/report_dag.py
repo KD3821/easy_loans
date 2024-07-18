@@ -42,6 +42,8 @@ def get_transactions_from_db(**kwargs) -> str:
 
     customer_id = kwargs.get("dag_run").conf.get("customer_id")
     upload_id = kwargs.get("dag_run").conf.get("upload_id")
+    upload_start_date = kwargs.get("dag_run").conf.get("upload_start_date")
+    upload_finish_date = kwargs.get("dag_run").conf.get("upload_finish_date")
     analysis_id = kwargs.get("dag_run").conf.get("analysis_id")
 
     pg_hook = PostgresHook("pg_connection")
@@ -83,12 +85,13 @@ def save_transactions_json(**kwargs) -> None:
 
 task_get_transactions_from_db = PythonOperator(task_id="get_transactions_from_db",
                                                python_callable=get_transactions_from_db,
+                                               provide_context=True,
                                                dag=dag)
 
 task_save_transactions_json = PythonOperator(task_id="save_transactions_json",
                                              python_callable=save_transactions_json,
-                                             dag=dag,
-                                             provide_context=True)
+                                             provide_context=True,
+                                             dag=dag)
 
 
 task_get_transactions_from_db >> task_save_transactions_json

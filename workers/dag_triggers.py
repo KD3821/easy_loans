@@ -4,12 +4,13 @@ import httpx
 from fastapi import Response
 
 from settings import AF_ADMIN, AF_PASS, AF_URL
+from apps.transactions.models import TransactionUpload
 
 
-async def analyze_report(customer_id: int, upload_id: int):
-    dag_id = "report"
+async def analyze_report(upload: TransactionUpload):
+    dag_id = "analysis"
     date = datetime.now().strftime("%H-%M-%S_%Y-%m-%d")
-    analysis_id = f"analysis_{customer_id}_{upload_id}_{date}"
+    analysis_id = f"analysis_{upload.customer_id}-{upload.id}_{date}"
 
     auth = httpx.BasicAuth(username=AF_ADMIN, password=AF_PASS)
     client = httpx.AsyncClient(auth=auth)
@@ -18,8 +19,10 @@ async def analyze_report(customer_id: int, upload_id: int):
             url=f"{AF_URL}/dags/{dag_id}/dagRuns",
             json={
                 "conf": {
-                    "customer_id": customer_id,
-                    "upload_id": upload_id,
+                    "customer_id": upload.customer_id,
+                    "upload_id": upload.id,
+                    "upload_start_date": upload.start_date.strftime("%Y-%m-%d"),
+                    "upload_finish_date": upload.finish_date.strftime("%Y-%m-%d"),
                     "analysis_id": analysis_id
                 },
                 "dag_run_id": analysis_id
