@@ -1,6 +1,6 @@
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from sqlalchemy import Column, Date, Integer, String, DateTime, Numeric, ForeignKey, JSON
+from sqlalchemy import Column, Date, Integer, DateTime, Numeric, ForeignKey, JSON, Float, String
 
 from db import Base
 
@@ -14,17 +14,12 @@ class Report(Base):
     finish_date = Column(Date)
     debit = Column(Numeric(10, 2), nullable=True)
     credit = Column(Numeric(10, 2), nullable=True)
+    closing_balance = Column(Numeric(10, 2))
     txn_count = Column(Integer)
+    estimate_annual_income = Column(Numeric(10, 2))
     risks = Column(JSON, nullable=True)
-    processed_by = Column(String)
+    risks_income_pct = Column(Float, nullable=True)
+    analysis_id = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     customer = relationship("Customer", back_populates="reports")
-
-    # todo add this logic:
-    # def balance(self):
-    #     if self.debit is None:
-    #         self.debit = Decimal("0.00")
-    #     if self.credit is None:
-    #         self.credit = Decimal("0.00")
-    #     return self.debit - self.credit

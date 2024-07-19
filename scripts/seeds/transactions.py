@@ -173,7 +173,7 @@ def create_csv_report(data, dates, first_income, second_income, save_balance, ri
 
     fieldnames = ["date", "customer_id", "type", "amount", "balance", "category", "details"]
     filename = f"report_{customer_id}_{date_start}_{date_finish}.csv"
-    dir_path = Path(f"uploaded_reports")
+    dir_path = Path("uploaded_reports")
 
     if not os.path.exists(dir_path):
         dir_path.mkdir(parents=True)
