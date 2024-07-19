@@ -1,6 +1,6 @@
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from sqlalchemy import Column, Date, Integer, DateTime, Numeric, ForeignKey, JSON, Float
+from sqlalchemy import Column, Date, Integer, DateTime, Numeric, ForeignKey, JSON, Float, String
 
 from db import Base
 
@@ -19,6 +19,7 @@ class Report(Base):
     estimate_annual_income = Column(Numeric(10, 2))
     risks = Column(JSON, nullable=True)
     risks_income_pct = Column(Float, nullable=True)
+    analysis_id = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     customer = relationship("Customer", back_populates="reports")

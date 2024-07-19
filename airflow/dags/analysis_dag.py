@@ -153,9 +153,9 @@ def calculate_report(**kwargs) -> Dict[str, Any]:
         risks_income_pct = round(risks_amount * 100 / earned, 2)
         risks.drop(["customer_id", "upload_id"], axis=1, inplace=True)
         risks["date"] = pd.to_datetime(risks["date"], infer_datetime_format=True).dt.strftime("%Y-%m-%d")
-        risks_dict = risks.to_dict(orient="records")
+        risks_list = risks.to_dict(orient="records")
     else:
-        risks_dict = None
+        risks_list = []
         risks_income_pct = None
 
     report_dict = {
@@ -168,7 +168,7 @@ def calculate_report(**kwargs) -> Dict[str, Any]:
         "txn_count": txn_count,
         "estimate_annual_income": est_annual_income,
         "risks_income_pct": risks_income_pct,
-        "risks": risks_dict
+        "risks": risks_list
     }
 
     json_byte_object = json.dumps(report_dict, indent=4)
@@ -189,9 +189,25 @@ def finalize_report(**kwargs) -> None:
     s3_hook = S3Hook("s3_connector")
     analysis_file = s3_hook.download_file(key=f"analysis/{analysis_id}.json", bucket_name=BUCKET)
 
-    data = pd.read_json(analysis_file)
+    data = pd.read_json(analysis_file, typ="series")
 
-    data['risks'] = list(map(lambda x: json.dumps(x), data['risks']))
+    risks = data["risks"]
+    if risks:
+        risks = list(map(
+            lambda x: {"id": x.get("id"), "amount": x.get("amount"), "details": x.get("details")}, risks
+        ))
+    else:
+        risks = None
+
+    data.drop(["risks"], inplace=True)
+    data = pd.DataFrame(data).transpose()
+    data["risks"] = None
+
+    if risks:
+        data.at[0, "risks"] = risks
+        data["risks"] = list(map(lambda x: json.dumps(x), data["risks"]))
+
+    data["analysis_id"] = analysis_id
 
     engine = create_engine(f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}")
 
