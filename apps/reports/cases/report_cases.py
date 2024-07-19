@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from core import AppException
 from apps.transactions.storages import TransactionStorage
 from apps.transactions.schemas import TransactionUploadCompleted
-from ..schemas import ReportDates, ReportUploaded, ReportStatus, ReportDeleted
+from ..schemas import ReportDates, ReportUploaded, ReportStatus, ReportDeleted, ReportResult
 from ..storages import ReportStorage, ReportSettingsStorage
 from workers.celery_tasks import upload_csv_report, delete_uploaded_report
 from workers.dag_triggers import analyze_report
@@ -84,9 +84,15 @@ class ReportCases:
 
         return ReportDeleted(id=upload.id, task_id=task.id)
 
-    async def init_analysis(self, customer_id: int, upload_id: int):
+    async def init_analysis(self, customer_id: int, upload_id: int) -> dict:
         upload = await self._transaction_repo.get_upload(customer_id, upload_id)
 
         analysis_id = await analyze_report(upload)
 
         return {'upload_id': upload_id, 'details': {'customer_id': customer_id, 'analysis_id': analysis_id}}
+
+    async def list_results(self, customer_id: int) -> List[ReportResult]:
+        return await self._report_repo.list_results(customer_id)
+
+    async def get_result_details(self, customer_id: int, analysis_id: str) -> ReportResult:
+        return await self._report_repo.get_result(customer_id, analysis_id)

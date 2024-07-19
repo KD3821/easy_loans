@@ -7,7 +7,7 @@ from dependency_injector.wiring import inject, Provide
 from core import BaseRoute, IsAuthenticated, ErrorDetails
 from apps.transactions.schemas import TransactionUploadCompleted
 from .cases.report_cases import ReportCases
-from .schemas import ReportDates, ReportUploaded
+from .schemas import ReportDates, ReportUploaded, ReportResult
 from .containers import Container
 
 router = APIRouter(
@@ -82,3 +82,22 @@ async def check_upload_status(
     report_cases: ReportCases = Depends(Provide[Container.report_cases])
 ):
     return await report_cases.check_upload(customer_id, upload_id)
+
+
+@router.get("/reports/{customer_id}/results", response_model=List[ReportResult])
+@inject
+async def list_analysis_results(
+    customer_id: int,
+    report_cases: ReportCases = Depends(Provide[Container.report_cases])
+):
+    return await report_cases.list_results(customer_id)
+
+
+@router.get("/reports/{customer_id}/results/{analysis_id}", response_model=ReportResult)
+@inject
+async def get_analysis_result(
+    customer_id: int,
+    analysis_id: str,
+    report_cases: ReportCases = Depends(Provide[Container.report_cases])
+):
+    return await report_cases.get_result_details(customer_id, analysis_id)
