@@ -3,6 +3,7 @@ from typing import List
 from sqlalchemy import select, and_
 
 from db import async_session
+from core import AppException
 from ..models import Report as ReportModel
 from ..schemas import ReportResult
 
@@ -14,7 +15,7 @@ class ReportStorage:
     async def list_results(cls, customer_id: int) -> List[ReportResult]:
         async with async_session() as session:
             query = await session.execute(
-                select(cls._table).filter(cls._table.customer_id == customer_id )
+                select(cls._table).filter(cls._table.customer_id == customer_id)
             )
             results = query.scalars()
 
@@ -32,5 +33,8 @@ class ReportStorage:
                 )
             )
             result = query.scalars().first()
+
+            if result is None:
+                raise AppException("analysis_result.analysis_result_not_found")
 
         return ReportResult.model_validate(result)
