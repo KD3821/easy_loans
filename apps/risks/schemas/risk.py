@@ -20,3 +20,8 @@ class Risk(RiskCreate):
 class RiskList(BaseModel):
     total: int
     risks: List[Risk]
+
+
+class RiskUpdate(BaseModel):
+    category: str | None = None
+    details: str | None = None
