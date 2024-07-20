@@ -6,7 +6,12 @@ from datetime import date, timedelta
 
 from faker import Faker
 
+from scripts.db_session import db_session
+from apps.risks.models import Risk
+
 fake = Faker()
+
+upload_dirname = "uploaded_reports"
 
 new_category_list = (
     ("groceries", (0.7, 2.0)),
@@ -31,9 +36,13 @@ new_category_list = (
 
 fake_risks = (
     ("online bookmaker", "1xBet"),
+    ("online bookmaker", "WilliamsBet"),
     ("microfinance", "Credit Expert"),
+    ("microfinance", "ZapZap"),
     ("online gambling", "Casino 777"),
     ("online gambling", "PokerStars"),
+    ("entertainment", "Maximus"),
+    ("entertainment", "7 Sins")
 )
 
 fake_first_income = 1500.0
@@ -52,7 +61,7 @@ fake_report_dates = (
 )
 
 
-def create_fake_txns(data, dates, first_income, second_income, save_balance, risks):
+def create_fake_txns(data, dates, first_income, second_income, save_balance):
     customer_id, salary, init_balance, first, second, rent, company, risk = data
     balance = init_balance
     fixed_finish_date = None
@@ -139,28 +148,32 @@ def create_fake_txns(data, dates, first_income, second_income, save_balance, ris
             fixed_finish_date = (current - timedelta(days=1)).strftime("%Y-%m-%d")
             break
     if risk:
-        rs_txns = random.randint(1, 5)
+        rs_txns = random.randint(1, int(len(transactions) / 10))
+        risks = db_session.query(Risk).all()
+        db_session.close()
+        if not risks:
+            risks = fake_risks
         while rs_txns:
             rsk = random.choice(risks)
-            risk_cat, risk_name = rsk
+            risk_category = rsk.category
+            risk_details = rsk.details
             while True:
                 txn = random.choice(transactions)
-                if txn.get("type") == "credit" and txn.get("category") != risk_cat:
-                    txn["category"] = risk_cat
-                    txn["details"] = risk_name
+                if txn.get("type") == "credit" and txn.get("category") != risk_category:
+                    txn["category"] = risk_category
+                    txn["details"] = risk_details
                     rs_txns -= 1
                     break
     return transactions, fixed_finish_date
 
 
-def create_csv_report(data, dates, first_income, second_income, save_balance, risks):
+def create_csv_report(data, dates, first_income, second_income, save_balance):
     txns, fixed_date = create_fake_txns(
         data=data,
         dates=dates,
         first_income=first_income,
         second_income=second_income,
-        save_balance=save_balance,
-        risks=risks
+        save_balance=save_balance
     )
 
     customer_id = data[0]
@@ -173,7 +186,7 @@ def create_csv_report(data, dates, first_income, second_income, save_balance, ri
 
     fieldnames = ["date", "customer_id", "type", "amount", "balance", "category", "details"]
     filename = f"report_{customer_id}_{date_start}_{date_finish}.csv"
-    dir_path = Path("uploaded_reports")
+    dir_path = Path(upload_dirname)
 
     if not os.path.exists(dir_path):
         dir_path.mkdir(parents=True)

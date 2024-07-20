@@ -1,4 +1,4 @@
-from .transaction import NewTransaction, Transaction
+from .transaction import NewTransaction, Transaction, TransactionList, TransactionUpdate
 from .transaction_upload import TransactionUpload, TransactionUploadCompleted
 
 __all__ = (
@@ -6,4 +6,6 @@ __all__ = (
     "Transaction",
     "TransactionUpload",
     "TransactionUploadCompleted",
+    "TransactionList",
+    "TransactionUpdate",
 )

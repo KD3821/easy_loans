@@ -1,20 +1,48 @@
 from typing import List
 
-from sqlalchemy import select, or_, and_
+from sqlalchemy import select, or_, and_, desc, asc, func
 from celery.result import AsyncResult
 
 from db import async_session
-from core.exceptions import AppException
-from ..schemas import TransactionUpload
+from core import AppException, Pagination, PaginationOrder
+from ..schemas import TransactionUpload, Transaction, TransactionList, TransactionUpdate
 from ..models import Transaction as TransactionModel
 from ..models import TransactionUpload as TransactionUploadModel
 from scripts.seeds.transactions import create_csv_report
 from apps.reports.schemas import ReportDates, ReportSettingsGenerate
+from apps.risks.models import Risk as RiskModel
 
 
 class TransactionStorage:
     _table = TransactionModel
     _upload_table = TransactionUploadModel
+    _risk_table = RiskModel
+
+    @classmethod
+    async def validate_risk(cls, customer_id: int, transaction_id: int) -> TransactionModel:
+        async with async_session() as session:
+            sub_query = select(cls._table).where(
+                and_(
+                    cls._table.customer_id == customer_id,
+                    cls._table.id == transaction_id
+                )
+            ).subquery()
+
+            query = await session.execute(
+                select(cls._table.id).where(
+                    or_(
+                        cls._risk_table.details == sub_query.c.details,
+                        cls._risk_table.category == sub_query.c.category
+                    )
+                ).select_from(sub_query)
+            )
+
+            transaction = query.scalars().first()
+
+            if transaction is None:
+                raise AppException("validate_risk.no_risk_transaction")
+
+        return transaction
 
     @classmethod
     async def check_overlapping_dates(cls, customer_id: int, dates: ReportDates) -> ReportDates:
@@ -75,8 +103,7 @@ class TransactionStorage:
             dates=[dates.start_date, dates.finish_date],
             first_income=float(gen_data.first_income),
             second_income=float(gen_data.second_income),
-            save_balance=float(gen_data.save_balance),
-            risks=gen_data.risks
+            save_balance=float(gen_data.save_balance)
         )
         return filepath, filename
 
@@ -124,3 +151,74 @@ class TransactionStorage:
             uploads = query.scalars()
 
         return uploads
+
+    @classmethod
+    async def get_txn(cls, customer_id: int, transaction_id: int) -> TransactionModel:
+        async with async_session() as session:
+            query = await session.execute(
+                select(cls._table).where(
+                    and_(
+                        cls._table.customer_id == customer_id,
+                        cls._table.id == transaction_id
+                    )
+                )
+            )
+            transaction = query.scalars().first()
+
+        if transaction is None:
+            raise AppException("transaction_details.transaction_not_found")
+
+        return transaction
+
+    @classmethod
+    async def get_one(cls, customer_id: int, transaction_id: int) -> Transaction:
+        transaction = await cls.get_txn(customer_id, transaction_id)
+        return Transaction.model_validate(transaction)
+
+    @classmethod
+    async def get_many(cls, customer_id: int, pagination: Pagination) -> TransactionList:
+        async with async_session() as session:
+            order = desc if pagination.order == PaginationOrder.DESC else asc
+            query = await session.execute(
+                select(cls._table)
+                .filter(cls._table.customer_id == customer_id)
+                .limit(pagination.per_page)
+                .offset(pagination.page - 1 if pagination.page == 1 else (pagination.page - 1) * pagination.per_page)
+                .order_by(order(cls._table.id))
+            )
+            transactions = query.scalars()
+            count = await session.execute(
+                select(func.count())
+                .select_from(select(cls._table.id).where(
+                    cls._table.customer_id == customer_id
+                ).subquery())
+            )
+            transaction_count = count.scalar_one()
+
+        transaction_list = [Transaction.model_validate(transaction) for transaction in transactions]
+
+        return TransactionList(total=transaction_count, transactions=transaction_list)
+
+    @classmethod
+    async def update_transaction(cls, customer_id: int, transaction_id: int, data: TransactionUpdate) -> Transaction:
+        await cls.validate_risk(customer_id, transaction_id)
+
+        async with async_session() as session:
+            query = await session.execute(
+                select(cls._table).where(
+                    and_(
+                        cls._table.customer_id == customer_id,
+                        cls._table.id == transaction_id
+                    )
+                )
+            )
+            transaction = query.scalars().first()
+
+            if data.category is not None:
+                transaction.category = data.category
+            if data.details is not None:
+                transaction.details = data.details
+
+            await session.commit()
+
+        return Transaction.model_validate(transaction)

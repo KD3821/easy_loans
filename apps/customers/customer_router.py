@@ -3,7 +3,7 @@ from typing import Annotated
 from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends
 
-from core import BaseRoute, IsAuthenticated, ErrorDetails, Pagination, pagination_params
+from core import BaseRoute, IsAuthenticated, ErrorDetails, Pagination, pagination_params, HasManagerRole
 from .schemas import Customer, NewCustomer, CustomerUpdate, CustomerList
 from .cases import CustomerCases
 from .containers import Container
@@ -56,10 +56,14 @@ async def update_customer(
     return await customer_cases.update(customer_id, data)
 
 
-@router.delete("/customers/{customer_id}", response_model=Customer)
+@router.delete("/customers/{customer_id}",
+               response_model=Customer,
+               dependencies=[Depends(HasManagerRole())],
+               name="delete customer (manager role only)")
 @inject
 async def delete_customer(
     customer_id: int,
     customer_cases: CustomerCases = Depends(Provide[Container.customer_cases])
 ):
+
     return await customer_cases.delete(customer_id)

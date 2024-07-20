@@ -8,7 +8,7 @@ from db import Base
 class ReportSettings(Base):
     __tablename__ = "reportsettings"
 
-    # PCT is for percentage from monthly_income
+    # PCT is for percentage
     FIRST_INCOME_PCT = 40
     SECOND_INCOME_PCT = (100 - FIRST_INCOME_PCT)
     STOP_SPENDING_AT_PCT = 1
@@ -17,15 +17,8 @@ class ReportSettings(Base):
     SECOND_INCOME_DAYS = (20, 25)
     RENTAL_RATE_PCT = 20
 
-    RISKS = [
-        ("online bookmaker", "1xBet"),
-        ("microfinance", "Credit Expert"),
-        ("online gambling", "Casino 777"),
-        ("online gambling", "PokerStars"),
-    ]
-
     id = Column(Integer, primary_key=True)
-    customer_id = Column(Integer, ForeignKey('customers.id'))
+    customer_id = Column(Integer, ForeignKey('customers.id', ondelete="CASCADE"))
     monthly_income = Column(Numeric(8, 2))
     starting_balance = Column(Numeric(8, 2))
     save_balance = Column(Numeric(8, 2))
@@ -36,4 +29,4 @@ class ReportSettings(Base):
     have_risks = Column(Boolean)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    customer = relationship("Customer", back_populates="report_settings")
+    customer = relationship("Customer", back_populates="reportsettings")

@@ -1,6 +1,7 @@
 from datetime import date
 from enum import Enum
 from decimal import Decimal
+from typing import List
 
 from pydantic import BaseModel, ConfigDict
 
@@ -22,6 +23,15 @@ class NewTransaction(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class Transaction(NewTransaction):  # todo check if needed
-
+class Transaction(NewTransaction):
     id: int
+
+
+class TransactionList(BaseModel):
+    total: int
+    transactions: List[Transaction]
+
+
+class TransactionUpdate(BaseModel):
+    category: str | None = None
+    details: str | None = None
