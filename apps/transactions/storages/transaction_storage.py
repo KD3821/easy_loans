@@ -10,11 +10,39 @@ from ..models import Transaction as TransactionModel
 from ..models import TransactionUpload as TransactionUploadModel
 from scripts.seeds.transactions import create_csv_report
 from apps.reports.schemas import ReportDates, ReportSettingsGenerate
+from apps.risks.models import Risk as RiskModel
 
 
 class TransactionStorage:
     _table = TransactionModel
     _upload_table = TransactionUploadModel
+    _risk_table = RiskModel
+
+    @classmethod
+    async def validate_risk(cls, customer_id: int, transaction_id: int) -> TransactionModel:
+        async with async_session() as session:
+            sub_query = select(cls._table).where(
+                and_(
+                    cls._table.customer_id == customer_id,
+                    cls._table.id == transaction_id
+                )
+            ).subquery()
+
+            query = await session.execute(
+                select(cls._table.id).where(
+                    or_(
+                        cls._risk_table.details == sub_query.c.details,
+                        cls._risk_table.category == sub_query.c.category
+                    )
+                ).select_from(sub_query)
+            )
+
+            transaction = query.scalars().first()
+
+            if transaction is None:
+                raise AppException("validate_risk.no_risk_transaction")
+
+        return transaction
 
     @classmethod
     async def check_overlapping_dates(cls, customer_id: int, dates: ReportDates) -> ReportDates:
@@ -174,6 +202,8 @@ class TransactionStorage:
 
     @classmethod
     async def update_transaction(cls, customer_id: int, transaction_id: int, data: TransactionUpdate) -> Transaction:
+        await cls.validate_risk(customer_id, transaction_id)
+
         async with async_session() as session:
             query = await session.execute(
                 select(cls._table).where(

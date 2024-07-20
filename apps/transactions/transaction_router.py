@@ -39,7 +39,9 @@ async def transaction_details(
     return await transaction_cases.transaction_details(customer_id, transaction_id)
 
 
-@router.patch("/transactions/{customer_id}/{transaction_id}", response_model=Transaction)
+@router.patch("/transactions/{customer_id}/{transaction_id}",
+              response_model=Transaction,
+              name="update category & details of risky transaction")
 @inject
 async def update_transaction(
     customer_id: int,

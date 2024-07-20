@@ -56,10 +56,14 @@ async def update_customer(
     return await customer_cases.update(customer_id, data)
 
 
-@router.delete("/customers/{customer_id}", dependencies=[Depends(HasManagerRole())], response_model=Customer)
+@router.delete("/customers/{customer_id}",
+               response_model=Customer,
+               dependencies=[Depends(HasManagerRole())],
+               name="delete customer (manager role only)")
 @inject
 async def delete_customer(
     customer_id: int,
     customer_cases: CustomerCases = Depends(Provide[Container.customer_cases])
 ):
+
     return await customer_cases.delete(customer_id)
