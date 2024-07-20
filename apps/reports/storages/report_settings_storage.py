@@ -38,8 +38,7 @@ class ReportSettingsStorage:
             rental_rate=report_settings.rental_rate,
             have_risks=report_settings.have_risks,
             first_income=first_income,
-            second_income=second_income,
-            risks=cls._table.RISKS
+            second_income=second_income
         )
 
     @classmethod

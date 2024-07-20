@@ -103,8 +103,7 @@ class TransactionStorage:
             dates=[dates.start_date, dates.finish_date],
             first_income=float(gen_data.first_income),
             second_income=float(gen_data.second_income),
-            save_balance=float(gen_data.save_balance),
-            risks=gen_data.risks
+            save_balance=float(gen_data.save_balance)
         )
         return filepath, filename
 

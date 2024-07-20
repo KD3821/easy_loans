@@ -39,4 +39,3 @@ class ReportSettingsGenerate(ReportSettingsCreate):
     first_income: Decimal
     second_income: Decimal
     save_balance: Decimal
-    risks: List[Tuple[str, str]]

@@ -8,7 +8,7 @@ from db import Base
 class ReportSettings(Base):
     __tablename__ = "reportsettings"
 
-    # PCT is for percentage from monthly_income
+    # PCT is for percentage
     FIRST_INCOME_PCT = 40
     SECOND_INCOME_PCT = (100 - FIRST_INCOME_PCT)
     STOP_SPENDING_AT_PCT = 1
@@ -16,13 +16,6 @@ class ReportSettings(Base):
     FIRST_INCOME_DAYS = (5, 10)
     SECOND_INCOME_DAYS = (20, 25)
     RENTAL_RATE_PCT = 20
-
-    RISKS = [
-        ("online bookmaker", "1xBet"),
-        ("microfinance", "Credit Expert"),
-        ("online gambling", "Casino 777"),
-        ("online gambling", "PokerStars"),
-    ]
 
     id = Column(Integer, primary_key=True)
     customer_id = Column(Integer, ForeignKey('customers.id', ondelete="CASCADE"))
