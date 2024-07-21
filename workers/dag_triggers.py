@@ -39,3 +39,7 @@ async def analyze_report(upload: TransactionUpload):
         )
 
     return res.json().get("dag_run_id")
+
+
+async def process_loan(loan):
+    return "check_uuid"

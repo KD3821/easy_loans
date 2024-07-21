@@ -43,7 +43,7 @@ class LoanCreate(BaseModel):
 class Loan(LoanCreate, LoanId):
     customer_id: int
     status: LoanStatus
-    decision: str | None
+    decision_uid: str | None
     processed_by: EmailStr
     created_at: datetime
     updated_at: datetime | None
@@ -57,3 +57,8 @@ class LoanUpdate(LoanCreate):
     month_term: int | None = None
     coapplicant_fullname: str | None = None
     coapplicant_income: Decimal | None = None
+
+
+class LoanStatusUpdate(BaseModel):
+    status: LoanStatus
+    decision_uid: str

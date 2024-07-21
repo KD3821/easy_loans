@@ -1,6 +1,6 @@
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from sqlalchemy import Column, Integer, String, DateTime, Numeric, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, DateTime, Numeric, ForeignKey
 
 from db import Base
 
@@ -20,7 +20,7 @@ class Loan(Base):
     amount = Column(Numeric(8, 2))
     month_term = Column(Integer)
     status = Column(String, default=CREATED)
-    decision = Column(Text, nullable=True)
+    decision_uid = Column(String, nullable=True)
     processed_by = Column(String, ForeignKey('users.email'))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

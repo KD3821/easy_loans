@@ -4,7 +4,7 @@ from sqlalchemy import select, and_
 
 from db import async_session
 from core import AppException
-from ..schemas import Loan, LoanStatus, LoanCreate, LoanUpdate
+from ..schemas import Loan, LoanStatus, LoanCreate, LoanUpdate, LoanStatusUpdate
 from ..models import Loan as LoanModel
 from apps.users.models import User as UserModel
 
@@ -13,13 +13,15 @@ class LoanStorage:
     _table = LoanModel
 
     @classmethod
-    async def validate_employee(cls, customer_id: int, loan_id: id, employee_data: dict) -> None:
+    async def validate_update(cls, customer_id: int, loan_id: id, employee_data: dict) -> None:
         loan = await cls.get_loan(customer_id, loan_id)
+        if loan.status != cls._table.CREATED:
+            raise AppException("modify_loan.loan_is_proceeded")
         if loan.processed_by != employee_data.get("email") and employee_data.get("role") != UserModel.MANAGER:
-            raise AppException("update_loan.employee_not_assigned")
+            raise AppException("modify_loan.employee_not_assigned")
 
     @classmethod
-    async def get_loan(cls, customer_id: int, loan_id: int) -> Loan:
+    async def get_loan(cls, customer_id: int, loan_id: int) -> LoanModel:
         async with async_session() as session:
             query = await session.execute(
                 select(cls._table).where(
@@ -29,12 +31,12 @@ class LoanStorage:
                     )
                 )
             )
-            result = query.scalars().first()
+            loan = query.scalars().first()
 
-            if result is None:
+            if not loan:
                 raise AppException("get_loan.loan_not_found")
 
-        return Loan.model_validate(result)
+        return loan
 
     @classmethod
     async def list(cls, customer_id: int, status: LoanStatus | None = None) -> List[Loan]:
@@ -70,8 +72,10 @@ class LoanStorage:
         return Loan.model_validate(new_loan)
 
     @classmethod
-    async def update_loan(cls, customer_id: int, loan_id: int, data: LoanUpdate, employee_data: dict) -> Loan:
-        await cls.validate_employee(customer_id, loan_id, employee_data)
+    async def update_loan(
+            cls, customer_id: int, loan_id: int, data: LoanUpdate | LoanStatusUpdate, employee_data: dict
+    ) -> Loan:
+        await cls.validate_update(customer_id, loan_id, employee_data)
         async with async_session() as session:
             query = await session.execute(
                 select(cls._table).where(
@@ -94,7 +98,7 @@ class LoanStorage:
 
     @classmethod
     async def delete(cls, customer_id: int, loan_id: int, employee_data: dict) -> None:
-        await cls.validate_employee(customer_id, loan_id, employee_data)
+        await cls.validate_update(customer_id, loan_id, employee_data)
         async with async_session() as session:
             query = await session.execute(
                 select(cls._table).where(

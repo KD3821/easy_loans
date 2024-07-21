@@ -80,3 +80,18 @@ async def delete_loan(
         "role": request.state.user.role
     }
     return await loan_cases.delete_loan(customer_id, loan_id, employee_data)
+
+
+@router.post("/loans/{customer_id}/{loan_id}/process")
+@inject
+async def process_loan(
+    customer_id: int,
+    loan_id: int,
+    request: Request,
+    loan_cases: LoanCases = Depends(Provide[Container.loan_cases])
+):
+    employee_data = {
+        "email": request.state.user.email,
+        "role": request.state.user.role
+    }
+    return await loan_cases.process_loan(customer_id, loan_id, employee_data)
