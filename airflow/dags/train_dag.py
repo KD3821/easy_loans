@@ -80,7 +80,6 @@ def prepare_data() -> None:
     X['Loan_Amount_Term'].fillna(X['Loan_Amount_Term'].mode()[0], inplace=True)
     X['LoanAmount'].fillna(X['LoanAmount'].median(), inplace=True)
     X['LoanAmount_log'] = np.log(X['LoanAmount'])
-    X['LoanAmount_log'].hist(bins=20)
     X['Loan_Status'].replace('N', 0, inplace=True)
     X['Loan_Status'].replace('Y', 1, inplace=True)
 
@@ -124,10 +123,15 @@ def train_model() -> str:
     result["mae"] = median_absolute_error(data["y_test"], prediction)
 
     date = datetime.now().strftime("%H-%M-%S_%Y-%m-%d")
+
     session = s3_hook.get_session("ru-1")
     resource = session.resource("s3")
+
     json_byte_object = json.dumps(result)
     resource.Object(BUCKET, f"train_results/{date}.json").put(Body=json_byte_object)
+
+    pickle_byte_obj = pickle.dumps(model)
+    resource.Object(BUCKET, f"models/LR.pkl").put(Body=pickle_byte_obj)
 
     _LOG.info("Model training finished")
 

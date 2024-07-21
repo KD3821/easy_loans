@@ -20,6 +20,7 @@ class Customer(Base):
     DIVORCED = "divorced"
     WIDOWED = "widowed"
     URBAN = "city"
+    SEMIURBAN = "town"
     RURAL = "country"
 
     id = Column(Integer, primary_key=True)

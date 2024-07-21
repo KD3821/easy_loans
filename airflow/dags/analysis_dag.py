@@ -1,3 +1,4 @@
+import os
 import json
 import logging
 from datetime import timedelta, datetime
@@ -9,8 +10,6 @@ from airflow.utils.dates import days_ago
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.python import PythonOperator
-
-import os
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
 
