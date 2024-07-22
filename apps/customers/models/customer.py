@@ -3,8 +3,8 @@ from sqlalchemy.sql import func
 from sqlalchemy import Column, Integer, String, DateTime, Date, Boolean, Numeric
 
 from db import Base
-from apps.reports.models import ReportSettings, Report  # for relationship
-from apps.loans.models import Loan  # for relationship
+# from apps.reports.models import ReportSettings, Report  # for relationship
+# from apps.loans.models import Loan  # for relationship
 
 
 class Customer(Base):
@@ -29,6 +29,7 @@ class Customer(Base):
     gender = Column(String)
     birthdate = Column(Date)
     education = Column(String, default=SCHOOL)
+    marital_status = Column(String, default=UNMARRIED)
     children = Column(Integer, default=0)
     self_employed = Column(Boolean)
     employer = Column(String)

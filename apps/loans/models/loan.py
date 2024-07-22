@@ -15,8 +15,8 @@ class Loan(Base):
 
     id = Column(Integer, primary_key=True)
     customer_id = Column(Integer, ForeignKey('customers.id'))
-    coapplicant_fullname = Column(String)
-    coapplicant_income = Column(Numeric(8, 2))
+    coapplicant_fullname = Column(String, nullable=True)
+    coapplicant_income = Column(Numeric(8, 2), nullable=True)
     amount = Column(Numeric(8, 2))
     month_term = Column(Integer)
     status = Column(String, default=CREATED)

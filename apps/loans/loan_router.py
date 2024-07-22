@@ -82,7 +82,7 @@ async def delete_loan(
     return await loan_cases.delete_loan(customer_id, loan_id, employee_data)
 
 
-@router.post("/loans/{customer_id}/{loan_id}/process")
+@router.post("/loans/{customer_id}/{loan_id}/process", response_model=Loan)
 @inject
 async def process_loan(
     customer_id: int,
