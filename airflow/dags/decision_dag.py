@@ -1,7 +1,8 @@
 import os
 import json
+import pickle
 import logging
-from datetime import timedelta, datetime
+from datetime import timedelta
 from typing import Dict, Any
 
 import pandas as pd
@@ -47,12 +48,12 @@ dag = DAG(
 
 
 def get_data_from_db(**kwargs) -> Dict[str, Any]:
-    _LOG.info("Loan request pipeline is initialized.")
+    _LOG.info("Decision pipeline is initialized.")
 
     customer_id = kwargs.get("dag_run").conf.get("customer_id")
     loan_id = kwargs.get("dag_run").conf.get("loan_id")
     decision_uid = kwargs.get("dag_run").conf.get("decision_uid")
-    analysis_start_date = kwargs.get("dat_run").conf.get("analysis_start_date")
+    analysis_start_date = kwargs.get("dag_run").conf.get("analysis_start_date")
 
     pg_hook = PostgresHook("pg_connection")
     conn = pg_hook.get_conn()
@@ -113,6 +114,7 @@ def get_data_from_db(**kwargs) -> Dict[str, Any]:
     }
 
     decision_props = {
+        "loan_id": loan_id,
         "decision_uid": decision_uid,
         "decision_dict": decision_dict
     }
@@ -174,10 +176,9 @@ def transform_customer_data(**kwargs) -> Dict[str, Any]:
 
     decision_dict = prepare_customer_data(data, decision_dict)
 
-    decision_props = {
-        "decision_uid": decision_uid,
-        "decision_dict": decision_dict
-    }
+    decision_props["decision_dict"] = decision_dict
+
+    _LOG.info(f"Customer data successfully transformed.")
 
     return decision_props
 
@@ -206,10 +207,9 @@ def transform_loan_data(**kwargs) -> Dict[str, Any]:
 
     decision_dict = prepare_loan_data(data, decision_dict)
 
-    decision_props = {
-        "decision_uid": decision_uid,
-        "decision_dict": decision_dict
-    }
+    decision_props["decision_dict"] = decision_dict
+
+    _LOG.info(f"Loan data successfully transformed.")
 
     return decision_props
 
@@ -230,12 +230,71 @@ def transform_report_data(**kwargs) -> Dict[str, Any]:
 
     decision_dict = prepare_report_data(data, decision_dict)
 
-    decision_props = {
-        "decision_uid": decision_uid,
-        "decision_dict": decision_dict
-    }
+    decision_props["decision_dict"] = decision_dict
+
+    _LOG.info(f"Report data successfully transformed.")
 
     return decision_props
 
 
-# todo download model/LR.pkl & predict decision & and add risk_data
+def process_model_prediction(**kwargs) -> None:
+    ti = kwargs.get("ti")
+    decision_props = ti.xcom_pull(task_ids="transform_report_data")
+    loan_id = decision_props.get("loan_id")
+    decision_uid = decision_props.get("decision_uid")
+    decision_dict = decision_props.get("decision_dict")
+
+    s3_hook = S3Hook("s3_connector")
+
+    file = s3_hook.download_file(key=f"models/LR.pkl", bucket_name=BUCKET)
+    model = pickle.load(open(file, 'rb'))
+
+    decision_df = pd.DataFrame.from_dict(decision_dict, orient='index')
+    decision_df = decision_df.transpose()
+    decision_proba = model.predict_proba(decision_df)
+
+    decision_text = f"Customer is eligible for loan with probability of '{decision_proba[0][1]}'"
+
+    data = pd.DataFrame(columns=["loan_id", "decision_uid", "decision_text"])
+
+    data.loc[0] = [loan_id, decision_uid, decision_text]
+
+    engine = create_engine(f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}")
+
+    data.to_sql(name="decisions", con=engine, index=False, if_exists='append')
+
+    json_byte_object = json.dumps(data.to_dict(), indent=4)
+    session = s3_hook.get_session("ru-1")
+    resource = session.resource("s3")
+    resource.Object(BUCKET, f"decision_results/{decision_uid}.json").put(Body=json_byte_object)
+
+    _LOG.info(f"Decision successfully stored in DB.")
+
+
+task_get_data_from_db = PythonOperator(task_id="get_data_from_db",
+                                       python_callable=get_data_from_db,
+                                       provide_context=True,
+                                       dag=dag)
+
+task_transform_customer_data = PythonOperator(task_id="transform_customer_data",
+                                              python_callable=transform_customer_data,
+                                              provide_context=True,
+                                              dag=dag)
+
+task_transform_loan_data = PythonOperator(task_id="transform_loan_data",
+                                          python_callable=transform_loan_data,
+                                          provide_context=True,
+                                          dag=dag)
+
+task_transform_report_data = PythonOperator(task_id="transform_report_data",
+                                            python_callable=transform_report_data,
+                                            provide_context=True,
+                                            dag=dag)
+
+task_process_model_prediction = PythonOperator(task_id="process_model_prediction",
+                                               python_callable=process_model_prediction,
+                                               provide_context=True,
+                                               dag=dag)
+
+
+task_get_data_from_db >> task_transform_customer_data >> task_transform_loan_data >> task_transform_report_data >> task_process_model_prediction

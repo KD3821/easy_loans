@@ -5,7 +5,6 @@ from fastapi import Response
 
 from settings import AF_ADMIN, AF_PASS, AF_URL
 from apps.transactions.models import TransactionUpload
-from apps.loans.models import Loan
 
 
 async def analyze_report(upload: TransactionUpload):
@@ -42,7 +41,7 @@ async def analyze_report(upload: TransactionUpload):
     return res.json().get("dag_run_id")
 
 
-async def process_loan(loan: Loan):
+async def process_loan(loan):
     dag_id = "decision"
     date = datetime.now().strftime("%H-%M-%S_%Y-%m-%d")
     decision_uid = f"decision_{loan.customer_id}-{loan.id}_{date}"
