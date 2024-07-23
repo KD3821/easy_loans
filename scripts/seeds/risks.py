@@ -11,8 +11,8 @@ RISKS = [
     ("microfinance", "ZapZap"),
     ("online gambling", "Casino 777"),
     ("online gambling", "PokerStars"),
-    ("entertainment", "Maximus"),
-    ("entertainment", "7 Sins"),
+    ("adult entertainment", "Maximus"),
+    ("adult entertainment", "7 Sins"),
 ]
 
 

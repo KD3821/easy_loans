@@ -191,7 +191,7 @@ def transform_loan_data(**kwargs) -> Dict[str, Any]:
     data = pd.read_json(file)
 
     def prepare_loan_data(loan_data, final_dict):
-        if loan_data["coapplicant_income"].loc[0] is not None:
+        if pd.notna(loan_data.at[0, "coapplicant_income"]):
             final_dict["CoapplicantIncome"] = float(loan_data["coapplicant_income"].loc[0])
 
         final_dict["LoanAmount"] = float(loan_data["amount"].loc[0] / 1000)

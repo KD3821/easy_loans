@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, date
 
 import httpx
 from fastapi import Response
@@ -41,13 +41,10 @@ async def analyze_report(upload: TransactionUpload):
     return res.json().get("dag_run_id")
 
 
-async def process_loan(loan):
+async def process_loan(customer_id: int, loan_id: int, start_date: date):
     dag_id = "decision"
-    date = datetime.now().strftime("%H-%M-%S_%Y-%m-%d")
-    decision_uid = f"{dag_id}_{loan.customer_id}-{loan.id}_{date}"
-
-    analysis_start_date = datetime.now() - timedelta(days=180)  # to check last 6 month
-    analysis_start_data = analysis_start_date.date().strftime("%Y-%m-%d")
+    decision_uid = f"{dag_id}_{customer_id}-{loan_id}_{datetime.now().strftime('%H-%M-%S_%Y-%m-%d')}"
+    analysis_start_date = start_date.strftime("%Y-%m-%d")
 
     auth = httpx.BasicAuth(username=AF_ADMIN, password=AF_PASS)
     client = httpx.AsyncClient(auth=auth)
@@ -56,10 +53,10 @@ async def process_loan(loan):
             url=f"{AF_URL}/dags/{dag_id}/dagRuns",
             json={
                 "conf": {
-                    "customer_id": loan.customer_id,
-                    "loan_id": loan.id,
+                    "customer_id": customer_id,
+                    "loan_id": loan_id,
                     "decision_uid": decision_uid,
-                    "analysis_start_date": analysis_start_data
+                    "analysis_start_date": analysis_start_date
                 },
                 "dag_run_id": decision_uid
             },

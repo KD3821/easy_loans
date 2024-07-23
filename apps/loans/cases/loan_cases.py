@@ -1,5 +1,6 @@
 from typing import List
 
+from apps.reports.storages import ReportStorage
 from ..storages import LoanStorage
 from ..schemas import Loan, LoanStatus, LoanCreate, LoanUpdate, LoanStatusUpdate
 from ..models import Loan as LoanModel
@@ -7,8 +8,9 @@ from workers.dag_triggers import process_loan
 
 
 class LoanCases:
-    def __init__(self, loan_repo: LoanStorage):
+    def __init__(self, loan_repo: LoanStorage, report_repo: ReportStorage):
         self._loan_repo = loan_repo
+        self._report_repo = report_repo
 
     async def list_loans(self, customer_id: int, status: LoanStatus) -> List[Loan]:
         return await self._loan_repo.list(customer_id, status)
@@ -27,9 +29,11 @@ class LoanCases:
         await self._loan_repo.delete(customer_id, loan_id, employee_data)
 
     async def process_loan(self, customer_id, loan_id, employee_data: dict) -> Loan:
+        analysis_start_date = await self._report_repo.validate_processing(customer_id)
+
         validated_loan = await self._loan_repo.validate_update(customer_id, loan_id, employee_data)
 
-        decision_uid = await process_loan(validated_loan)
+        decision_uid = await process_loan(customer_id, validated_loan.id, analysis_start_date)
 
         data = LoanStatusUpdate(status=LoanModel.PROCESSING, decision_uid=decision_uid)
 
