@@ -54,3 +54,5 @@ AMQP_DSN = os.environ.get("AMQP_DSN")
 AF_ADMIN = os.environ.get("AF_ADMIN")
 AF_PASS = os.environ.get("AF_PASS")
 AF_URL = os.environ.get("AF_URL")
+
+BUCKET = os.environ.get("BUCKET")

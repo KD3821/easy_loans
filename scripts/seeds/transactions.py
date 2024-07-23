@@ -13,7 +13,7 @@ fake = Faker()
 
 upload_dirname = "uploaded_reports"
 
-new_category_list = (
+category_list = (
     ("groceries", (0.7, 2.0)),
     ("public transport", (0.05, 0.1)),
     ("taxi", (0.2, 0.4)),
@@ -43,21 +43,6 @@ fake_risks = (
     ("online gambling", "PokerStars"),
     ("entertainment", "Maximus"),
     ("entertainment", "7 Sins")
-)
-
-fake_first_income = 1500.0
-fake_second_income = 2000.0
-fake_save_balance = 30.0
-
-# (customer_id, month_salary, starting_balance, first_income_day, second_income_day, rental_rate, employer, have_risk)
-fake_customer_data = (
-    (1, 3500.0, 450.0, 10, 25, 600.0, "Campbell&Co", 1),
-    (2, 3500.0, 600.0, 5, 20, 550.0, "Solar", 0),
-    (3, 3500.0, 800.0, 7, 22, 700.0, "NewEra", 0),
-)
-
-fake_report_dates = (
-    (date(2024, 6, 1), date(2024, 7, 11)),
 )
 
 
@@ -124,7 +109,7 @@ def create_fake_txns(data, dates, first_income, second_income, save_balance):
                     estimate_balance = init_balance
                 if balance < estimate_balance:
                     break
-                category, limits = random.choice(new_category_list)
+                category, limits = random.choice(category_list)
                 percent = random.uniform(*limits)
                 amount = round((salary * percent / 100), 2)
                 new_balance = round((balance - amount), 2)
@@ -199,14 +184,3 @@ def create_csv_report(data, dates, first_income, second_income, save_balance):
         writer.writerows(txns)
 
     return file_path, filename
-
-
-# for obj in fake_customer_data:
-#     create_csv_report(
-#         data=obj,
-#         dates=fake_report_dates,
-#         first_income=fake_first_income,
-#         second_income=fake_second_income,
-#         save_balance=fake_save_balance,
-#         risks=fake_risks
-#     )

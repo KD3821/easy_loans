@@ -13,12 +13,13 @@ class LoanStorage:
     _table = LoanModel
 
     @classmethod
-    async def validate_update(cls, customer_id: int, loan_id: id, employee_data: dict) -> None:
+    async def validate_update(cls, customer_id: int, loan_id: id, employee_data: dict) -> LoanModel:
         loan = await cls.get_loan(customer_id, loan_id)
         if loan.status != cls._table.CREATED:
             raise AppException("modify_loan.loan_is_proceeded")
         if loan.processed_by != employee_data.get("email") and employee_data.get("role") != UserModel.MANAGER:
             raise AppException("modify_loan.employee_not_assigned")
+        return loan
 
     @classmethod
     async def get_loan(cls, customer_id: int, loan_id: int) -> LoanModel:
@@ -75,13 +76,13 @@ class LoanStorage:
     async def update_loan(
             cls, customer_id: int, loan_id: int, data: LoanUpdate | LoanStatusUpdate, employee_data: dict
     ) -> Loan:
-        await cls.validate_update(customer_id, loan_id, employee_data)
+        validated_loan = await cls.validate_update(customer_id, loan_id, employee_data)
         async with async_session() as session:
             query = await session.execute(
                 select(cls._table).where(
                     and_(
-                        cls._table.customer_id == customer_id,
-                        cls._table.id == loan_id
+                        cls._table.customer_id == validated_loan.customer_id,
+                        cls._table.id == validated_loan.id
                     )
                 )
             )
@@ -98,13 +99,13 @@ class LoanStorage:
 
     @classmethod
     async def delete(cls, customer_id: int, loan_id: int, employee_data: dict) -> None:
-        await cls.validate_update(customer_id, loan_id, employee_data)
+        validated_loan = await cls.validate_update(customer_id, loan_id, employee_data)
         async with async_session() as session:
             query = await session.execute(
                 select(cls._table).where(
                     and_(
-                        cls._table.customer_id == customer_id,
-                        cls._table.id == loan_id
+                        cls._table.customer_id == validated_loan.customer_id,
+                        cls._table.id == validated_loan.id
                     )
                 )
             )

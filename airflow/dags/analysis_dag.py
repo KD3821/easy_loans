@@ -6,7 +6,6 @@ from typing import Dict, Any
 
 import pandas as pd
 from airflow.models import DAG
-from airflow.utils.dates import days_ago
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.python import PythonOperator
@@ -15,22 +14,21 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+BUCKET = os.getenv("BUCKET")
+
 DB_USER = os.getenv("DB_USER")
 DB_PASS = os.getenv("DB_PASS")
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
 DB_NAME = os.getenv("DB_NAME")
 
-
 _LOG = logging.getLogger()
 _LOG.addHandler(logging.StreamHandler())
-
-BUCKET = "5e4f9aa0-52a3cd57-dc94-43c1-ae9a-f2724eeac656"
 
 DEFAULT_ARGS = {
     "owner": "Denis",
     "email": "devsboom@gmail.com",
-    "email_on_failure": True,
+    "email_on_failure": False,
     "email_on_retry": False,
     "retry": 3,
     "retry_delay": timedelta(seconds=30)
@@ -38,10 +36,8 @@ DEFAULT_ARGS = {
 
 dag = DAG(
     dag_id="analysis",
-    schedule_interval="0 1 * * *",
-    start_date=days_ago(2),
     catchup=False,
-    tags=["mlops"],
+    tags=["analysis_ops"],
     default_args=DEFAULT_ARGS
 )
 
@@ -68,7 +64,7 @@ def get_transactions_from_db(**kwargs) -> Dict[str, Any]:
     session = s3_hook.get_session("ru-1")
     resource = session.resource("s3")
     json_byte_object = json.dumps(data.to_dict(orient='records'), indent=4)
-    resource.Object(BUCKET, f"transactions/{analysis_id}.json").put(Body=json_byte_object)
+    resource.Object(BUCKET, f"analysis_transactions/{analysis_id}.json").put(Body=json_byte_object)
 
     _LOG.info("Transactions for analysis successfully uploaded.")
 
@@ -90,7 +86,7 @@ def check_risk_transactions(**kwargs) -> Dict[str, Any]:
     analysis_id = analysis_props.get("analysis_id")
 
     s3_hook = S3Hook("s3_connector")
-    file = s3_hook.download_file(key=f"transactions/{analysis_id}.json", bucket_name=BUCKET)
+    file = s3_hook.download_file(key=f"analysis_transactions/{analysis_id}.json", bucket_name=BUCKET)
     data = pd.read_json(file)
 
     pg_hook = PostgresHook("pg_connection")
@@ -114,7 +110,7 @@ def check_risk_transactions(**kwargs) -> Dict[str, Any]:
         json_byte_object = json.dumps(total_risks.to_dict(), indent=4)
         session = s3_hook.get_session("ru-1")
         resource = session.resource("s3")
-        resource.Object(BUCKET, f"risks/{analysis_id}.json").put(Body=json_byte_object)
+        resource.Object(BUCKET, f"analysis_risks/{analysis_id}.json").put(Body=json_byte_object)
 
     _LOG.info(f"Transactions successfully checked for risks.")
 
@@ -131,7 +127,7 @@ def calculate_report(**kwargs) -> Dict[str, Any]:
     finish_date = datetime.strptime(finish_date_str, "%Y-%m-%d").date()
 
     s3_hook = S3Hook("s3_connector")
-    txn_file = s3_hook.download_file(key=f"transactions/{analysis_id}.json", bucket_name=BUCKET)
+    txn_file = s3_hook.download_file(key=f"analysis_transactions/{analysis_id}.json", bucket_name=BUCKET)
     data = pd.read_json(txn_file)
 
     txn_count = data.shape[0]
@@ -146,7 +142,7 @@ def calculate_report(**kwargs) -> Dict[str, Any]:
 
     if analysis_props.get("risks"):
         s3_hook = S3Hook("s3_connector")
-        risk_file = s3_hook.download_file(key=f"risks/{analysis_id}.json", bucket_name=BUCKET)
+        risk_file = s3_hook.download_file(key=f"analysis_risks/{analysis_id}.json", bucket_name=BUCKET)
         risks = pd.read_json(risk_file)
         risks_amount = risks.amount.sum()
         risks_income_pct = round(risks_amount * 100 / earned, 2)
@@ -173,7 +169,7 @@ def calculate_report(**kwargs) -> Dict[str, Any]:
     json_byte_object = json.dumps(report_dict, indent=4)
     session = s3_hook.get_session("ru-1")
     resource = session.resource("s3")
-    resource.Object(BUCKET, f"analysis/{analysis_id}.json").put(Body=json_byte_object)
+    resource.Object(BUCKET, f"analysis_results/{analysis_id}.json").put(Body=json_byte_object)
 
     _LOG.info(f"Report successfully calculated and uploaded.")
 
@@ -186,14 +182,15 @@ def finalize_report(**kwargs) -> None:
     analysis_id = analysis_props.get("analysis_id")
 
     s3_hook = S3Hook("s3_connector")
-    analysis_file = s3_hook.download_file(key=f"analysis/{analysis_id}.json", bucket_name=BUCKET)
+    analysis_file = s3_hook.download_file(key=f"analysis_results/{analysis_id}.json", bucket_name=BUCKET)
 
     data = pd.read_json(analysis_file, typ="series")
 
     risks = data["risks"]
     if risks:
         risks = list(map(
-            lambda x: {"id": x.get("id"), "amount": x.get("amount"), "details": x.get("details")}, risks
+            lambda x: {"id": x.get("id"), "amount": x.get("amount"), "category": x.get("category"),
+                       "details": x.get("details")}, risks
         ))
     else:
         risks = None

@@ -8,7 +8,6 @@ from typing import Dict, Any
 import pandas as pd
 import numpy as np
 from airflow.models import DAG
-from airflow.utils.dates import days_ago
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.python import PythonOperator
@@ -16,6 +15,8 @@ from sqlalchemy import create_engine
 from dotenv import load_dotenv
 
 load_dotenv()
+
+BUCKET = os.getenv("BUCKET")
 
 DB_USER = os.getenv("DB_USER")
 DB_PASS = os.getenv("DB_PASS")
@@ -26,12 +27,10 @@ DB_NAME = os.getenv("DB_NAME")
 _LOG = logging.getLogger()
 _LOG.addHandler(logging.StreamHandler())
 
-BUCKET = "5e4f9aa0-52a3cd57-dc94-43c1-ae9a-f2724eeac656"
-
 DEFAULT_ARGS = {
     "owner": "Denis",
     "email": "devsboom@gmail.com",
-    "email_on_failure": True,
+    "email_on_failure": False,
     "email_on_retry": False,
     "retry": 3,
     "retry_delay": timedelta(seconds=30)
@@ -39,10 +38,8 @@ DEFAULT_ARGS = {
 
 dag = DAG(
     dag_id="decision",
-    schedule_interval="0 1 * * *",
-    start_date=days_ago(2),
     catchup=False,
-    tags=["mlops"],
+    tags=["decision_ops"],
     default_args=DEFAULT_ARGS
 )
 
@@ -224,13 +221,36 @@ def transform_report_data(**kwargs) -> Dict[str, Any]:
     file = s3_hook.download_file(key=f"decision_reports/{decision_uid}.json", bucket_name=BUCKET)
     data = pd.read_json(file)
 
-    def prepare_report_data(report_data, final_dict):
+    def prepare_report_data(report_data, final_dict, decision_uid):
         final_dict["ApplicantIncome"] = int(report_data['estimate_annual_income'].median() / 12)
-        return final_dict
 
-    decision_dict = prepare_report_data(data, decision_dict)
+        risk_data = report_data.drop(['estimate_annual_income'], axis=1)
+        risk_data = risk_data[risk_data['risks_income_pct'].notna()]
+
+        if risk_data['risks'].count() == 0:
+            risk_dict = {}
+        else:
+            risk_dict = {}
+            risk_median = risk_data['risks_income_pct'].median()
+            risk_dict[decision_uid] = risk_median
+
+            risk_list = []
+            for risks in risk_data['risks']:
+                risk_list.extend(risks)
+
+            risk_stats = pd.DataFrame(risk_list, columns=['id', 'amount', 'category', 'details'])
+            stats = risk_stats.groupby('category').amount.sum().to_dict()
+
+            ids = risk_stats.groupby(['category'])
+            for k, v in ids.groups.items():
+                risk_dict[k] = {'spent': stats.get(k), 'id_list': [risk_stats.loc[i, 'id'] for i in v]}
+
+        return final_dict, risk_dict
+
+    decision_dict, risks_dict = prepare_report_data(data, decision_dict, decision_uid)
 
     decision_props["decision_dict"] = decision_dict
+    decision_props["risks_dict"] = risks_dict
 
     _LOG.info(f"Report data successfully transformed.")
 
@@ -243,6 +263,7 @@ def process_model_prediction(**kwargs) -> None:
     loan_id = decision_props.get("loan_id")
     decision_uid = decision_props.get("decision_uid")
     decision_dict = decision_props.get("decision_dict")
+    risks_dict = decision_props.get("risks_dict")
 
     s3_hook = S3Hook("s3_connector")
 
@@ -253,7 +274,16 @@ def process_model_prediction(**kwargs) -> None:
     decision_df = decision_df.transpose()
     decision_proba = model.predict_proba(decision_df)
 
-    decision_text = f"Customer is eligible for loan with probability of '{decision_proba[0][1]}'"
+    decision_text = f"Customer is eligible for loan with probability of '{round(decision_proba[0][1], 2)}'."
+
+    if risks_dict:
+        risk_median = risks_dict.pop(decision_uid)
+        risk_text = f" Median balance of risk transactions equals {risk_median} % of annual income. Details:"
+
+        for k, v in risks_dict.items():
+            risk_text += f" {k}: total spent of {v.get('spent')} (transaction_id {[i for i in v.get('id_list')]});"
+
+        decision_text += risk_text
 
     data = pd.DataFrame(columns=["loan_id", "decision_uid", "decision_text"])
 

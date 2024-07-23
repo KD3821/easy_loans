@@ -27,9 +27,9 @@ class LoanCases:
         await self._loan_repo.delete(customer_id, loan_id, employee_data)
 
     async def process_loan(self, customer_id, loan_id, employee_data: dict) -> Loan:
-        loan = await self._loan_repo.get_loan(customer_id, loan_id)
+        validated_loan = await self._loan_repo.validate_update(customer_id, loan_id, employee_data)
 
-        decision_uid = await process_loan(loan)
+        decision_uid = await process_loan(validated_loan)
 
         data = LoanStatusUpdate(status=LoanModel.PROCESSING, decision_uid=decision_uid)
 
