@@ -54,5 +54,7 @@ AMQP_DSN = os.environ.get("AMQP_DSN")
 AF_ADMIN = os.environ.get("AF_ADMIN")
 AF_PASS = os.environ.get("AF_PASS")
 AF_URL = os.environ.get("AF_URL")
+AF_API_KEY = os.environ.get("AF_API_KEY")
+AF_WEBHOOK = os.environ.get("AF_WEBHOOK")
 
 BUCKET = os.environ.get("BUCKET")

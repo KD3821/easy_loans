@@ -10,6 +10,7 @@ import numpy as np
 from airflow.models import DAG
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.providers.http.hooks.http import HttpHook
 from airflow.operators.python import PythonOperator
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
@@ -23,6 +24,9 @@ DB_PASS = os.getenv("DB_PASS")
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
 DB_NAME = os.getenv("DB_NAME")
+
+AF_API_KEY = os.getenv("AF_API_KEY")
+AF_WEBHOOK = os.getenv("AF_WEBHOOK")
 
 _LOG = logging.getLogger()
 _LOG.addHandler(logging.StreamHandler())
@@ -257,7 +261,7 @@ def transform_report_data(**kwargs) -> Dict[str, Any]:
     return decision_props
 
 
-def process_model_prediction(**kwargs) -> None:
+def process_model_prediction(**kwargs) -> Dict[str, Any]:
     ti = kwargs.get("ti")
     decision_props = ti.xcom_pull(task_ids="transform_report_data")
     loan_id = decision_props.get("loan_id")
@@ -298,7 +302,23 @@ def process_model_prediction(**kwargs) -> None:
     resource = session.resource("s3")
     resource.Object(BUCKET, f"decision_results/{decision_uid}.json").put(Body=json_byte_object)
 
-    _LOG.info(f"Decision successfully stored in DB.")
+    _LOG.info(f"Decision successfully stored in DB: {loan_id=}, {decision_uid=}.")
+
+    return {"loan_id": loan_id, "decision_uid": decision_uid}
+
+
+def notify_loan_analysed(**kwargs) -> None:
+    ti = kwargs.get("ti")
+    info = ti.xcom_pull(task_ids="process_model_prediction")
+    loan_id = info.get("loan_id")
+    decision_uid = info.get("decision_uid")
+
+    http_hook = HttpHook(method="POST", http_conn_id="loans_connection")
+    http_hook.run(
+        endpoint=AF_WEBHOOK, json={"loan_id": loan_id, "decision_uid": decision_uid}, headers={"Apikey": AF_API_KEY}
+    )
+
+    _LOG.info(f"Notification is sent for: {loan_id=}, {decision_uid=}.")
 
 
 task_get_data_from_db = PythonOperator(task_id="get_data_from_db",
@@ -326,5 +346,10 @@ task_process_model_prediction = PythonOperator(task_id="process_model_prediction
                                                provide_context=True,
                                                dag=dag)
 
+task_notify_loan_analysed = PythonOperator(task_id="notify_loan_analysed",
+                                           python_callable=notify_loan_analysed,
+                                           provide_context=True,
+                                           dag=dag)
 
-task_get_data_from_db >> task_transform_customer_data >> task_transform_loan_data >> task_transform_report_data >> task_process_model_prediction
+(task_get_data_from_db >> task_transform_customer_data >> task_transform_loan_data >> task_transform_report_data >>
+ task_process_model_prediction >> task_notify_loan_analysed)

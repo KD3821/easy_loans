@@ -4,7 +4,7 @@ from sqlalchemy import select, and_
 
 from db import async_session
 from core import AppException
-from ..schemas import Loan, LoanStatus, LoanCreate, LoanUpdate, LoanStatusUpdate
+from ..schemas import Loan, LoanStatus, LoanCreate, LoanUpdate, LoanStatusUpdate, LoanFinal, DecisionNotification
 from ..models import Loan as LoanModel
 from apps.users.models import User as UserModel
 
@@ -13,12 +13,27 @@ class LoanStorage:
     _table = LoanModel
 
     @classmethod
-    async def validate_update(cls, customer_id: int, loan_id: id, employee_data: dict) -> LoanModel:
+    async def validate_update(cls, customer_id: int, loan_id: int, employee_data: dict) -> LoanModel:
         loan = await cls.get_loan(customer_id, loan_id)
         if loan.status != cls._table.CREATED:
             raise AppException("modify_loan.loan_is_proceeded")
         if loan.processed_by != employee_data.get("email") and employee_data.get("role") != UserModel.MANAGER:
             raise AppException("modify_loan.employee_not_assigned")
+        return loan
+
+    @classmethod
+    async def validate_finalize(
+            cls, customer_id: int, loan_id: int, loan_final: LoanFinal, employee_data: dict
+    ) -> LoanModel:
+        loan = await cls.get_loan(customer_id, loan_id)
+        if loan.status == cls._table.CREATED and loan_final.status == cls._table.APPROVED:
+            raise AppException("finalize_loan.approval_forbidden_loan_not_analyzed")
+        if loan.status == cls._table.PROCESSING:
+            raise AppException("finalize_loan.loan_is_processing")
+        if loan.status in (cls._table.APPROVED, cls._table.DECLINED):
+            raise AppException("finalize_loan.loan_is_finalized")
+        if loan.processed_by != employee_data.get("email") and employee_data.get("role") != UserModel.MANAGER:
+            raise AppException("finalize_loan.employee_not_assigned")
         return loan
 
     @classmethod
@@ -113,3 +128,44 @@ class LoanStorage:
 
             await session.delete(loan)
             await session.commit()
+
+    @classmethod
+    async def set_analysed(cls, data: DecisionNotification) -> LoanStatusUpdate:
+        async with async_session() as session:
+            query = await session.execute(
+                select(cls._table).where(
+                    and_(
+                        cls._table.id == data.loan_id,
+                        cls._table.decision_uid == data.decision_uid
+                    )
+                )
+            )
+            loan = query.scalars().first()
+
+            if loan and loan.status == LoanModel.PROCESSING:
+                loan.status = LoanModel.ANALYSED
+                await session.commit()
+
+        if not loan:
+            raise AppException("set_analysed.loan_not_found")
+
+        return LoanStatusUpdate(status=loan.status, decision_uid=loan.decision_uid)
+
+    @classmethod
+    async def finalize(cls, customer_id: int, loan_id: int, loan_final: LoanFinal) -> Loan:
+        async with async_session() as session:
+            query = await session.execute(
+                select(cls._table).where(
+                    and_(
+                        cls._table.id == loan_id,
+                        cls._table.customer_id == customer_id
+                    )
+                )
+            )
+            loan = query.scalars().first()
+            loan.status = loan_final.status
+
+            await session.commit()
+            await session.refresh(loan)
+
+        return Loan.model_validate(loan)

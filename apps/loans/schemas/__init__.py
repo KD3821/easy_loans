@@ -1,4 +1,5 @@
-from .loan import Loan, LoanCreate, LoanStatus, LoanUpdate, LoanStatusUpdate
+from .loan import Loan, LoanCreate, LoanStatus, LoanUpdate, LoanStatusUpdate, LoanFinal
+from .decision import  Decision, DecisionNotification
 
 __all__ = (
     "Loan",
@@ -6,4 +7,7 @@ __all__ = (
     "LoanStatus",
     "LoanUpdate",
     "LoanStatusUpdate",
+    "LoanFinal",
+    "Decision",
+    "DecisionNotification",
 )

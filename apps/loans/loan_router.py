@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Request
 from dependency_injector.wiring import inject, Provide
 
 from core import BaseRoute, IsAuthenticated, ErrorDetails
-from .schemas import Loan, LoanStatus, LoanCreate, LoanUpdate
+from .schemas import Loan, LoanStatus, LoanCreate, LoanUpdate, LoanFinal
 from .containers import Container
 from .cases import LoanCases
 
@@ -95,3 +95,19 @@ async def process_loan(
         "role": request.state.user.role
     }
     return await loan_cases.process_loan(customer_id, loan_id, employee_data)
+
+
+@router.post("/loans/{customer_id}/{loan_id}/finalize", response_model=Loan)
+@inject
+async def finalize_loan(
+    customer_id: int,
+    loan_id: int,
+    loan_final: LoanFinal,
+    request: Request,
+    loan_cases: LoanCases = Depends(Provide[Container.loan_cases])
+):
+    employee_data = {
+        "email": request.state.user.email,
+        "role": request.state.user.role
+    }
+    return await loan_cases.finalize_loan(customer_id, loan_id, loan_final, employee_data)

@@ -1,16 +1,19 @@
 from typing import List
 
 from apps.reports.storages import ReportStorage
-from ..storages import LoanStorage
-from ..schemas import Loan, LoanStatus, LoanCreate, LoanUpdate, LoanStatusUpdate
+from ..storages import LoanStorage, DecisionStorage
+from ..schemas import Loan, LoanStatus, LoanCreate, LoanUpdate, LoanStatusUpdate, LoanFinal, DecisionNotification
 from ..models import Loan as LoanModel
 from workers.dag_triggers import process_loan
 
 
 class LoanCases:
-    def __init__(self, loan_repo: LoanStorage, report_repo: ReportStorage):
+    def __init__(
+            self, loan_repo: LoanStorage, report_repo: ReportStorage, decision_repo: DecisionStorage
+    ):
         self._loan_repo = loan_repo
         self._report_repo = report_repo
+        self._decision_repo = decision_repo
 
     async def list_loans(self, customer_id: int, status: LoanStatus) -> List[Loan]:
         return await self._loan_repo.list(customer_id, status)
@@ -31,10 +34,23 @@ class LoanCases:
     async def process_loan(self, customer_id, loan_id, employee_data: dict) -> Loan:
         analysis_start_date = await self._report_repo.validate_processing(customer_id)
 
-        validated_loan = await self._loan_repo.validate_update(customer_id, loan_id, employee_data)
+        await self._loan_repo.validate_update(customer_id, loan_id, employee_data)
 
-        decision_uid = await process_loan(customer_id, validated_loan.id, analysis_start_date)
+        decision_uid = await process_loan(customer_id, loan_id, analysis_start_date)
 
         data = LoanStatusUpdate(status=LoanModel.PROCESSING, decision_uid=decision_uid)
 
         return await self._loan_repo.update_loan(customer_id, loan_id, data, employee_data)
+
+    async def process_notification(self, data: DecisionNotification) -> LoanStatusUpdate:
+        await self._decision_repo.check_decision(data)
+
+        return await self._loan_repo.set_analysed(data)
+
+    async def get_decision_details(self, decision_uid: str):
+        return await self._decision_repo.get_decision(decision_uid)
+
+    async def finalize_loan(self, customer_id: int, loan_id: int, loan_final: LoanFinal, employee_data: dict) -> Loan:
+        await self._loan_repo.validate_finalize(customer_id, loan_id, loan_final, employee_data)
+
+        return await self._loan_repo.finalize(customer_id, loan_id, loan_final)

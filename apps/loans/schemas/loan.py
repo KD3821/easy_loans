@@ -12,6 +12,7 @@ class LoanId(BaseModel):
 class LoanStatus(str, Enum):
     CREATED = "created"
     PROCESSING = "processing"
+    ANALYSED = "analysed"
     APPROVED = "approved"
     DECLINED = "declined"
 
@@ -48,6 +49,7 @@ class Loan(LoanCreate, LoanId):
     created_at: datetime
     updated_at: datetime | None
     finalized_at: datetime | None
+    updated_at: datetime | None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -62,3 +64,13 @@ class LoanUpdate(LoanCreate):
 class LoanStatusUpdate(BaseModel):
     status: LoanStatus
     decision_uid: str
+
+
+class LoanFinal(BaseModel):
+    status: LoanStatus
+
+    @field_validator("status")
+    def validate_final_status(cls, v: str):
+        if v not in (LoanStatus.APPROVED, LoanStatus.DECLINED):
+            raise ValueError("Final loan status must be 'approved' or 'declined'.")
+        return v

@@ -10,6 +10,7 @@ class Loan(Base):
 
     CREATED = 'created'
     PROCESSING = 'processing'
+    ANALYSED = 'analysed'
     APPROVED = 'approved'
     DECLINED = 'declined'
 
