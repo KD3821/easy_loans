@@ -11,6 +11,7 @@ class NewCustomer(BaseModel):
     gender: str
     birthdate: date
     education: str
+    marital_status: str
     children: int
     self_employed: bool
     employer: str

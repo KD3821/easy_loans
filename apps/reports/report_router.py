@@ -54,7 +54,7 @@ async def list_uploads(
     return await report_cases.get_uploads(customer_id)
 
 
-@router.get("/reports/{customer_id}/upload/{upload_id}/analyse")
+@router.post("/reports/{customer_id}/upload/{upload_id}/analyse")
 @inject
 async def analyse_upload(
     customer_id: int,

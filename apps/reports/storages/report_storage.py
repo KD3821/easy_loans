@@ -1,4 +1,5 @@
 from typing import List
+from datetime import datetime, timedelta
 
 from sqlalchemy import select, and_
 
@@ -10,6 +11,26 @@ from ..schemas import ReportResult
 
 class ReportStorage:
     _table = ReportModel
+
+    @classmethod
+    async def validate_processing(cls, customer_id: int):
+        date = datetime.now().date() - timedelta(days=180)  # must have reports with transactions during last 6 month
+
+        async with async_session() as session:
+            query = await session.execute(
+                select(cls._table).where(
+                    and_(
+                        cls._table.customer_id == customer_id,
+                        cls._table.finish_date >= date
+                    )
+                )
+            )
+            result = query.scalars().first()
+
+        if not result:
+            raise AppException("loan_processing.reports_not_found")
+
+        return date
 
     @classmethod
     async def list_results(cls, customer_id: int) -> List[ReportResult]:

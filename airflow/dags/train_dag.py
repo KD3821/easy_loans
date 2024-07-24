@@ -13,8 +13,11 @@ from sklearn.metrics import mean_squared_error, median_absolute_error, r2_score,
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.models import DAG
 from airflow.operators.python import PythonOperator
-from airflow.utils.dates import days_ago
+from dotenv import load_dotenv
 
+load_dotenv()
+
+BUCKET = os.getenv("BUCKET")
 
 _LOG = logging.getLogger()
 _LOG.addHandler(logging.StreamHandler())
@@ -23,8 +26,8 @@ train_csv = "train_data.csv"
 datasets_dirname = "/home/dk/easy_loans/airflow/datasets"
 train_results_dirname = "/home/dk/easy_loans/airflow/train_results"
 
-BUCKET = "5e4f9aa0-52a3cd57-dc94-43c1-ae9a-f2724eeac656"
 DATA_PATH = "datasets/loan_prediction.pkl"
+
 TARGET = "Loan_Status"
 FEATURES = ["Loan_ID", "Gender", "Married", "Dependents", "Education", "Self_Employed", "ApplicantIncome",
             "CoapplicantIncome", "LoanAmount", "Loan_Amount_Term", "Credit_History", "Property_Area", "Loan_Status"]
@@ -32,7 +35,7 @@ FEATURES = ["Loan_ID", "Gender", "Married", "Dependents", "Education", "Self_Emp
 DEFAULT_ARGS = {
     "owner": "Denis",
     "email": "devsboom@gmail.com",
-    "email_on_failure": True,
+    "email_on_failure": False,
     "email_on_retry": False,
     "retry": 3,
     "retry_delay": timedelta(seconds=30)
@@ -40,10 +43,8 @@ DEFAULT_ARGS = {
 
 dag = DAG(
     dag_id="train",
-    schedule_interval="0 1 * * *",
-    start_date=days_ago(2),
     catchup=False,
-    tags=["mlops"],
+    tags=["train_ops"],
     default_args=DEFAULT_ARGS
 )
 
@@ -80,7 +81,6 @@ def prepare_data() -> None:
     X['Loan_Amount_Term'].fillna(X['Loan_Amount_Term'].mode()[0], inplace=True)
     X['LoanAmount'].fillna(X['LoanAmount'].median(), inplace=True)
     X['LoanAmount_log'] = np.log(X['LoanAmount'])
-    X['LoanAmount_log'].hist(bins=20)
     X['Loan_Status'].replace('N', 0, inplace=True)
     X['Loan_Status'].replace('Y', 1, inplace=True)
 
@@ -110,9 +110,6 @@ def train_model() -> str:
         file = s3_hook.download_file(key=f"train_dataset/{name}.pkl", bucket_name=BUCKET)
         data[name] = pd.read_pickle(file)
 
-        pd.DataFrame(data[name]).to_csv(os.path.join('/home/dk/easy_loans/airflow/check_splits', f'{name}.csv'),
-                                        index=False)  # todo remove later
-
     model = LogisticRegression()
     model.fit(data["X_train"], data["y_train"])
     prediction = model.predict(data["X_test"])
@@ -123,15 +120,20 @@ def train_model() -> str:
     result["rmse"] = mean_squared_error(data["y_test"], prediction) ** 0.5
     result["mae"] = median_absolute_error(data["y_test"], prediction)
 
-    date = datetime.now().strftime("%H-%M-%S_%Y-%m-%d")
+    name = f'LR_{datetime.now().strftime("%H-%M-%S_%Y-%m-%d")}'
+
     session = s3_hook.get_session("ru-1")
     resource = session.resource("s3")
+
     json_byte_object = json.dumps(result)
-    resource.Object(BUCKET, f"train_results/{date}.json").put(Body=json_byte_object)
+    resource.Object(BUCKET, f"train_results/{name}.json").put(Body=json_byte_object)
+
+    pickle_byte_obj = pickle.dumps(model)
+    resource.Object(BUCKET, f"models/LR.pkl").put(Body=pickle_byte_obj)
 
     _LOG.info("Model training finished")
 
-    return date
+    return name
 
 
 def save_results(**kwargs) -> None:
